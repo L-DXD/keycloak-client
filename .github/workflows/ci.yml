@@ -1,0 +1,34 @@
+name: Keycloak CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Keycloak
+        uses: ./.github/actions/build-keycloak
+  test:
+    name: Run test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - id: gradle test
+        shell: bash
+        run: ./gradlew test
+      - name: Upload JVM HeapDumps
+        if: always()
+        uses: ./.github/actions/upload-heapdumps
+

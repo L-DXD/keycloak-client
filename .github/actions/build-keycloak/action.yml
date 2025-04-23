@@ -1,0 +1,16 @@
+name: Build Keycloak
+description: Builds Keycloak providing Maven repository with all artifacts
+
+runs:
+  using: composite
+  steps:
+    - id: maven-cache
+      name: Maven cache
+      uses: ./.github/actions/maven-cache
+      with:
+        create-cache-if-it-doesnt-exist: true
+
+    - id: build-keycloak
+      name: Build Keycloak
+      shell: bash
+      run: ./gradlew clean build
