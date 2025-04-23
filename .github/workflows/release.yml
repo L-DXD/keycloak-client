@@ -22,11 +22,13 @@ jobs:
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew publishAllPublicationsToMavenCentralRepository \
-          -PmavenCentralUsername=MAVEN_CENTRAL_USERNAME \
-          -PmavenCentralPassword=MAVEN_CENTRAL_PASSWORD
-          -Psigning.keyId=SIGNING_KEY
-          -Psigning.password=SIGNING_PASSWORD
+        run: |
+          ./gradlew publishAllPublicationsToMavenCentralRepository \
+            -PmavenCentralUsername="$MAVEN_CENTRAL_USERNAME" \
+            -PmavenCentralPassword="$MAVEN_CENTRAL_PASSWORD" \
+            -Psigning.keyId="$SIGNING_KEY" \
+            -Psigning.password="$SIGNING_PASSWORD"
+
 
       - name: Upload JVM HeapDumps
         if: always()
