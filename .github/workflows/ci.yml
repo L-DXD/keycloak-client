@@ -1,10 +1,8 @@
 name: Keycloak CI
 
 on:
-  push:
-    branches-ignore:
-      - main
   pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 concurrency:
@@ -27,7 +25,9 @@ jobs:
       - uses: actions/checkout@v4
       - id: gradle_test
         shell: bash
-        run: ./gradlew test
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build
       - name: Upload JVM HeapDumps
         if: always()
         uses: ./.github/actions/upload-heapdumps
