@@ -25,7 +25,7 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - id: gradle test
+      - id: gradle_test
         shell: bash
         run: ./gradlew test
       - name: Upload JVM HeapDumps
