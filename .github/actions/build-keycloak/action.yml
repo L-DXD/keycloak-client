@@ -11,6 +11,7 @@ runs:
         create-cache-if-it-doesnt-exist: true
 
     - name: Grant execute permission to Gradle
+      shell: bash
       run: chmod +x ./gradlew
 
     - id: build
