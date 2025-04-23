@@ -1,8 +1,11 @@
-name: CI for ${{ github.event.head_commit.message }}
+name: Keycloak Client CI
 
 on:
+  push:
+    branches-ignore:
+      - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, reopened]
   workflow_dispatch:
 
 concurrency:

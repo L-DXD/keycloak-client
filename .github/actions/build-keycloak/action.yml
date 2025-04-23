@@ -15,4 +15,6 @@ runs:
       shell: bash
       run: |
         chmod +x ./gradlew
-        ./gradlew clean build
+        ./gradlew --status
+        ./gradlew clean build --daemon
+        ./gradlew --status
