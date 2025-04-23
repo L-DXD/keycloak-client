@@ -50,8 +50,8 @@ public class MockWebServerExtension implements BeforeEachCallback, AfterEachCall
       } catch (Exception e) {
          if (e instanceof NoSuchFieldException) {
             throw new IllegalStateException(
-                "📛 fieldName을 찾을 수 없습니다. " +
-                    "@MockWebServerTest(fieldName = \"server\") 확인하세요.", e);
+                "Not found fieldName " +
+                    "check @MockWebServerTest(fieldName = \"server\").", e);
          }
 
          throw e;

@@ -13,7 +13,7 @@ Make sure you have installed the following software.
 * Java 17
 
 ## Guide
-Check the [step-by-step GUIDE](../../github/KeycloakClient/GUIDE.md) to get the detailed explanation of the example codes.
+Check the [step-by-step GUIDE](https://github.com/L-DXD/keycloak-client/github/KeycloakClient/GUIDE.md) to get the detailed explanation of the example codes.
 
 
 ## Contribution

@@ -38,7 +38,7 @@ public class KeycloakClientExtension implements BeforeAllCallback {
 
       } catch (NoSuchFieldException e) {
          throw new IllegalStateException(
-             "📛 Not Found fieldName. " +
+             "Not Found fieldName. " +
                  "Please check '@MockKeycloakClient(fieldName = \"keycloakClient\")'", e);
       }
    }
