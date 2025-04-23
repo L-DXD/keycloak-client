@@ -10,11 +10,11 @@ runs:
       with:
         create-cache-if-it-doesnt-exist: true
 
+    - name: Grant execute permission to Gradle
+      run: chmod +x ./gradlew
+
     - id: build
       name: Build & Test Keycloak
       shell: bash
       run: |
-        chmod +x ./gradlew
-        ./gradlew --status
-        ./gradlew clean build --daemon
-        ./gradlew --status
+        ./gradlew clean build --configuration-cache --build-cache --scan
