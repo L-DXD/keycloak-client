@@ -1,4 +1,4 @@
-name: Keycloak CI
+name: CI for ${{ github.event.head_commit.message }}
 
 on:
   pull_request:
