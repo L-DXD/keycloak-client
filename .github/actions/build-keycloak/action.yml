@@ -10,7 +10,7 @@ runs:
       with:
         create-cache-if-it-doesnt-exist: true
 
-    - id: build & test
+    - id: build
       name: Build & Test Keycloak
       shell: bash
       run: |
