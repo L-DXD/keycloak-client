@@ -1,0 +1,31 @@
+name: Release to Maven Central portal
+
+on:
+  push:
+    branches:
+      - release/**
+
+jobs:
+  publish:
+    name: Publish Maven Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Keycloak
+        uses: ./.github/actions/build-keycloak
+
+      - name: Publish to Maven Central
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: ./gradlew build publishAllPublicationsToMavenCentralRepository
+
+      - name: Upload JVM HeapDumps
+        if: always()
+        uses: ./.github/actions/upload-heapdumps
+
+

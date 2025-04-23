@@ -1,10 +1,11 @@
-name: Keycloak CI
+name: Keycloak Client CI
 
 on:
   push:
     branches-ignore:
       - main
   pull_request:
+    types: [opened, reopened]
   workflow_dispatch:
 
 concurrency:
@@ -13,22 +14,16 @@ concurrency:
 
 jobs:
   build:
-    name: Build
+    name: Run Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Build Keycloak
         uses: ./.github/actions/build-keycloak
-  test:
-    name: Run test
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-      - id: gradle test
-        shell: bash
-        run: ./gradlew test
+
       - name: Upload JVM HeapDumps
         if: always()
         uses: ./.github/actions/upload-heapdumps
+
 
