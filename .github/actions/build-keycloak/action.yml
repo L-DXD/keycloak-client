@@ -10,8 +10,8 @@ runs:
       with:
         create-cache-if-it-doesnt-exist: true
 
-    - id: build-keycloak
-      name: Build Keycloak
+    - id: build & test
+      name: Build & Test Keycloak
       shell: bash
       run: |
         chmod +x ./gradlew
