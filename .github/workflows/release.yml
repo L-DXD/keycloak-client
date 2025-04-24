@@ -12,9 +12,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+#
+#      - name: Build Keycloak
+#        uses: ./.github/actions/build-keycloak
 
-      - name: Build Keycloak
-        uses: ./.github/actions/build-keycloak
+      - name: Grant execute permission to Gradle
+        shell: bash
+        run: chmod +x ./gradlew
 
       - name: Publish to Maven Central
         env:
