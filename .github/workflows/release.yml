@@ -20,6 +20,9 @@ jobs:
         shell: bash
         run: chmod +x ./gradlew
 
+      - name: Check GPG version
+        run: gpg --version
+
       - name: Publish to Maven Central
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -31,8 +34,7 @@ jobs:
           ./gradlew publishAllPublicationsToMavenCentralRepository \
             -PmavenCentralUsername="$MAVEN_CENTRAL_USERNAME" \
             -PmavenCentralPassword="$MAVEN_CENTRAL_PASSWORD" \
-            -Psigning.key="$SIGNING_KEY" \
-            -Psigning.keyId="$SIGNING_KEY_ID" \
+            -Psigning.key="$SIGNING_KEY_ID" \
             -Psigning.password="$SIGNING_PASSWORD"
 
 

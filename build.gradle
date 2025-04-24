@@ -17,16 +17,15 @@ tasks.withType(Javadoc) {
     }
 }
 
+signing {
+    useGpgCmd()
+    sign publishing.publications
+}
 
 java {
     sourceCompatibility = '17'
     targetCompatibility = '17'
     modularity.inferModulePath = false
-}
-
-signing {
-    useInMemoryPgpKeys(findProperty("signing.keyId") as String, findProperty("signing.key") as String, findProperty("signing.password") as String)
-    sign publishing.publications
 }
 
 mavenPublishing {
