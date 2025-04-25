@@ -18,4 +18,4 @@ runs:
       name: Build & Test Keycloak
       shell: bash
       run: |
-        ./gradlew clean build
+        ./gradlew clean build --configuration-cache --build-cache --scan

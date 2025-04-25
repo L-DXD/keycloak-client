@@ -8,12 +8,17 @@
 
 - maven
 ```
+<dependency>
+    <groupId>io.github.l-dxd</groupId>
+    <artifactId>keycloak-client</artifactId>
+    <version>0.0.1</version>
+</dependency>
 
 ```
 
 - gradle
 ```
-
+implementation 'io.github.l-dxd:keycloak-client:0.0.1'
 ```
 
 ## Set KeycloakConfig
