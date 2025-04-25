@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'io.github.l-dxd'
-version = '0.0.1'
+version = '0.0.2'
 description = '"Client for convenient use of the Keycloak API'
 
 tasks.withType(Javadoc) {
@@ -43,7 +43,7 @@ mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 
-    coordinates("io.github.l-dxd", "keycloak-client", "0.0.1")
+    coordinates("io.github.l-dxd", "keycloak-client", project.version as String)
 
     pom {
         name = "keycloak-client"
