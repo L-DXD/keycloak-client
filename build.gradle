@@ -7,7 +7,7 @@ plugins {
     id 'signing'
 }
 
-group 'com.sd'
+group 'io.github.l-dxd'
 version = '0.0.1'
 description = '"Client for convenient use of the Keycloak API'
 
@@ -36,7 +36,7 @@ mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 
-    coordinates("com.sd", "keycloak-client", "0.0.1")
+    coordinates("io.github.l-dxd", "keycloak-client", "0.0.1")
 
     pom {
         name = "keycloak-client"
