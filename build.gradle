@@ -18,7 +18,11 @@ tasks.withType(Javadoc) {
 }
 
 signing {
-    useGpgCmd()
+    def signingKey = file('secret.asc').text
+    useInMemoryPgpKeys(
+            signingKey,
+            findProperty("signing.password") as String
+    )
     sign publishing.publications
 }
 
@@ -33,7 +37,6 @@ mavenPublishing {
     signAllPublications()
 
     coordinates("com.sd", "keycloak-client", "0.0.1")
-
 
     pom {
         name = "keycloak-client"
