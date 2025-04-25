@@ -59,6 +59,7 @@ public class JWTUtil {
    public static Mono<IDToken> getIdToken(String idToken) {
       try {
          TokenVerifier<IDToken> verifier = TokenVerifier.create(idToken, IDToken.class);
+
          return Mono.just(verifier.getToken());
       } catch (Exception e) {
          return Mono.error(e);
