@@ -21,7 +21,7 @@ signing {
     def signingKey = file('secret.asc').text
     println "📦 Loaded Signing Key:\n$signingKey"
     useInMemoryPgpKeys(
-            signingKey,
+            "-----BEG" + signingKey,
             findProperty("signing.password") as String
     )
     sign publishing.publications
