@@ -18,7 +18,6 @@ jobs:
       - name: Decode GPG key
         run: |
           echo "$SIGNING_KEY" | base64 --decode > secret.asc
-          cat secret.asc
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
