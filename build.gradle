@@ -18,11 +18,18 @@ tasks.withType(Javadoc) {
 }
 
 signing {
-    def signingKey = file('secret.asc').text
-    useInMemoryPgpKeys(
-            "-----BEG" + signingKey,
-            findProperty("signing.password") as String
-    )
+    def secretFile = file('secret.asc')
+    def signingKey = secretFile.exists() ? secretFile.text : null
+
+    if (signingKey != null) {
+        useInMemoryPgpKeys(
+                "-----BEG" + signingKey,
+                findProperty("signing.password") as String
+        )
+        sign publishing.publications
+    } else {
+        println "The secret.asc file does not exist. Skipping GPG signing."
+    }
     sign publishing.publications
 }
 
