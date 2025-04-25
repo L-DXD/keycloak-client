@@ -15,6 +15,12 @@ jobs:
 #
 #      - name: Build Keycloak
 #        uses: ./.github/actions/build-keycloak
+      - name: Decode GPG key
+        run: |
+          echo "$SIGNING_KEY" | base64 --decode > secret.asc
+          gpg --batch --import secret.asc
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Grant execute permission to Gradle
         shell: bash

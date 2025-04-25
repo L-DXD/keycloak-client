@@ -18,10 +18,11 @@ tasks.withType(Javadoc) {
 }
 
 signing {
-    useInMemoryPgpKeys(
-            findProperty("signing.secretKey") as String,
-            findProperty("signing.password") as String
-    )
+    useGpgCmd()
+//    useInMemoryPgpKeys(
+//            findProperty("signing.secretKey") as String,
+//            findProperty("signing.password") as String
+//    )
     sign publishing.publications
 }
 
