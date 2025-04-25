@@ -12,14 +12,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-#
+
 #      - name: Build Keycloak
 #        uses: ./.github/actions/build-keycloak
-      - name: Decode GPG key
-        run: |
-          echo "$SIGNING_KEY" | base64 --decode > secret.asc
-        env:
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+
+#      - name: Decode GPG key
+#        run: |
+#          echo "$SIGNING_KEY" | base64 --decode > secret.asc
+#        env:
+#          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Grant execute permission to Gradle
         shell: bash
@@ -36,6 +37,7 @@ jobs:
             -PmavenCentralUsername="$MAVEN_CENTRAL_USERNAME" \
             -PmavenCentralPassword="$MAVEN_CENTRAL_PASSWORD" \
             -Psigning.keyId="$SIGNING_KEY_ID" \
+            -Psigning.signingKey="$SIGNING_KEY" \
             -Psigning.password="$SIGNING_PASSWORD"
 
 

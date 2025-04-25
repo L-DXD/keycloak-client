@@ -18,10 +18,9 @@ tasks.withType(Javadoc) {
 }
 
 signing {
-    def signingKey = file('secret.asc').text
-    println "📦 Loaded Signing Key:\n$signingKey"
+    println "📦 Loaded Signing Key:\n" + findProperty("signing.password") as String
     useInMemoryPgpKeys(
-            "-----BEG" + signingKey,
+            findProperty("signing.signingKey") as String,
             findProperty("signing.password") as String
     )
     sign publishing.publications
