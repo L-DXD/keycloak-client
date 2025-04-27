@@ -11,14 +11,14 @@
 <dependency>
     <groupId>io.github.l-dxd</groupId>
     <artifactId>keycloak-client</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.3</version>
 </dependency>
 
 ```
 
 - gradle
 ```
-implementation 'io.github.l-dxd:keycloak-client:0.0.1'
+implementation 'io.github.l-dxd:keycloak-client:0.0.3'
 ```
 
 ## Set KeycloakConfig
