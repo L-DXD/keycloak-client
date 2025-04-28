@@ -47,18 +47,18 @@ public class JWTUtil {
       }
    }
 
-   public static Mono<AccessToken> getAccessToken(String accessToken) {
+   public static Mono<AccessToken> getAccessToken(String accessTokenString) {
       try {
-         TokenVerifier<AccessToken> verifier = TokenVerifier.create(accessToken, AccessToken.class);
+         TokenVerifier<AccessToken> verifier = TokenVerifier.create(accessTokenString, AccessToken.class);
          return Mono.just(verifier.getToken());
       } catch (Exception e) {
          return Mono.error(e);
       }
    }
 
-   public static Mono<IDToken> getIdToken(String idToken) {
+   public static Mono<IDToken> getIdToken(String idTokenString) {
       try {
-         TokenVerifier<IDToken> verifier = TokenVerifier.create(idToken, IDToken.class);
+         TokenVerifier<IDToken> verifier = TokenVerifier.create(idTokenString, IDToken.class);
 
          return Mono.just(verifier.getToken());
       } catch (Exception e) {
@@ -66,9 +66,9 @@ public class JWTUtil {
       }
    }
 
-   public static Mono<RefreshToken> getRefreshToken(String idToken) {
+   public static Mono<RefreshToken> getRefreshToken(String refreshTokenString) {
       try {
-         TokenVerifier<RefreshToken> verifier = TokenVerifier.create(idToken, RefreshToken.class);
+         TokenVerifier<RefreshToken> verifier = TokenVerifier.create(refreshTokenString, RefreshToken.class);
          return Mono.just(verifier.getToken());
       } catch (Exception e) {
          return Mono.error(e);
