@@ -134,7 +134,7 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
    }
 
    @Test
-   @DisplayName("case7: authenticate invalid token")
+   @DisplayName("case7. authenticate invalid token")
    void authenticateInvalidTokenTest() {
       // given
       Mono<KeycloakResponse<KeycloakIntrospectResponse>> invalidToken = keycloakClient.authAsync()
@@ -153,7 +153,7 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
    }
 
    @Test
-   @DisplayName("case8: authorize invalid token")
+   @DisplayName("case8. authorize invalid token")
    void getPublic() {
       // given
       Mono<KeycloakResponse<RSAPublicKey>> publicKey = keycloakClient.authAsync()
@@ -163,13 +163,13 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
       StepVerifier.create(publicKey)
           .assertNext((response) -> {
              assertThat(response.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
-             assertThat(response.getBody()).isNull();
+             assertThat(response.getBody()).isEmpty();
           })
           .verifyComplete();
    }
 
    @Test
-   @DisplayName("case9: authorize invalid token")
+   @DisplayName("case9. authorize invalid token")
    void authorizeInvalidTokenTest() {
       // given
       Mono<KeycloakResponse<KeycloakAuthorizationResult>> authorization = keycloakClient.authAsync()
@@ -189,7 +189,7 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
    }
 
    @Test
-   @DisplayName("case10: offline authentication")
+   @DisplayName("case10. offline authentication")
    void authenticationByOffline() {
       // given
       KeycloakJwksResponse jwks = KeycloakJwksResponse.builder()
