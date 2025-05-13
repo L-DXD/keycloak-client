@@ -145,7 +145,7 @@ public class KeycloakAuthAsyncClientImpl implements KeycloakAuthAsyncClient {
           .send()
           .flatMap((response) -> Mono.just(
               KeycloakResponse.of(response.getStatus(), response.getMessage(), KeycloakAuthorizationResult.builder()
-                  .granted(HttpResponseStatus.ACCEPTED.code() == response.getStatus())
+                  .granted(HttpResponseStatus.OK.code() == response.getStatus())
                   .authorizationResponse(response.getBody())
                   .build())));
    }
