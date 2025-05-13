@@ -1,5 +1,6 @@
 package com.sd.KeycloakClient.dto.auth;
 
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,4 +16,9 @@ public class KeycloakAuthorizationResult {
 
    private boolean granted;
    private KeycloakAuthorizationResponse authorizationResponse;
+
+
+   public Optional<KeycloakAuthorizationResponse> getAuthorizationResponse() {
+      return Optional.ofNullable(authorizationResponse);
+   }
 }

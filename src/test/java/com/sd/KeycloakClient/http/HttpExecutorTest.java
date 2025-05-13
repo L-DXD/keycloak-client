@@ -70,8 +70,10 @@ class HttpExecutorTest {
       StepVerifier.create(responseMono)
           .assertNext(res -> {
              assertThat(HttpResponseStatus.OK.code()).isEqualTo(res.getStatus());
-             assertThat(res.getBody()).isNotNull();
-             assertThat(((Map<String, String>) res.getBody()).get("accessToken")).isEqualTo("abc123");
+             assertThat(res.getBody()).isPresent();
+
+             Object responseBody = res.getBody().get();
+             assertThat(((Map<String, String>) responseBody).get("accessToken")).isEqualTo("abc123");
           })
           .verifyComplete();
    }
@@ -125,23 +127,23 @@ class HttpExecutorTest {
       StepVerifier.create(responseFlux)
           .assertNext((res) -> {
              assertThat(res.getStatus()).isEqualTo(HttpResponseStatus.NO_CONTENT.code());
-             assertThat(res.getBody()).isNull();
+             assertThat(res.getBody()).isEmpty();
           })
           .assertNext((res) -> {
              assertThat(res.getStatus()).isEqualTo(HttpResponseStatus.NOT_FOUND.code());
-             assertThat(res.getBody()).isNull();
+             assertThat(res.getBody()).isEmpty();
           })
           .assertNext((res) -> {
              assertThat(res.getStatus()).isEqualTo(HttpResponseStatus.FORBIDDEN.code());
-             assertThat(res.getBody()).isNull();
+             assertThat(res.getBody()).isEmpty();
           })
           .assertNext((res) -> {
              assertThat(res.getStatus()).isEqualTo(HttpResponseStatus.METHOD_NOT_ALLOWED.code());
-             assertThat(res.getBody()).isNull();
+             assertThat(res.getBody()).isEmpty();
           })
           .assertNext((res) -> {
              assertThat(res.getStatus()).isEqualTo(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
-             assertThat(res.getBody()).isNull();
+             assertThat(res.getBody()).isEmpty();
           })
           .verifyComplete();
    }

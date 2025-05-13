@@ -1,5 +1,6 @@
 package com.sd.KeycloakClient.dto;
 
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,5 +18,9 @@ public class KeycloakResponse<T> {
           .message(message)
           .body(body)
           .build();
+   }
+
+   public Optional<T> getBody() {
+      return Optional.ofNullable(body);
    }
 }

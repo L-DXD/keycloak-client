@@ -10,6 +10,7 @@ import com.sd.KeycloakClient.dto.auth.KeycloakAuthorizationResult;
 import com.sd.KeycloakClient.dto.auth.KeycloakIntrospectResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakJwksResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakTokenInfo;
+import com.sd.KeycloakClient.dto.auth.VerifyTokenResult;
 import com.sd.KeycloakClient.factory.KeycloakClient;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.security.interfaces.RSAPublicKey;
@@ -51,9 +52,12 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
           })
           .assertNext(response -> {
              assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody().getTokenType()).isEqualTo("Bearer");
-             assertThat(response.getBody().getAccessToken()).isNotNull();
-             assertThat(response.getBody().getRefreshToken()).isNotNull();
+             assertThat(response.getBody()).isPresent();
+             KeycloakTokenInfo body = response.getBody().get();
+
+             assertThat(body.getTokenType()).isEqualTo("Bearer");
+             assertThat(body.getAccessToken()).isNotNull();
+             assertThat(body.getRefreshToken()).isNotNull();
           })
           .verifyComplete();
    }
@@ -140,7 +144,10 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
       StepVerifier.create(invalidToken)
           .assertNext((response) -> {
              assertThat(response.getStatus()).isEqualTo(HttpResponseStatus.OK.code());
-             assertThat(response.getBody().getActive()).isFalse();
+             assertThat(response.getBody()).isPresent();
+
+             KeycloakIntrospectResponse body = response.getBody().get();
+             assertThat(body.getActive()).isFalse();
           })
           .verifyComplete();
    }
@@ -173,7 +180,10 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
           .assertNext((response) -> {
              assertThat(response.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
              assertThat(response.getMessage()).contains("Unauthorized");
-             assertThat(response.getBody().isGranted()).isFalse();
+             assertThat(response.getBody()).isPresent();
+
+             KeycloakAuthorizationResult body = response.getBody().get();
+             assertThat(body.isGranted()).isFalse();
           })
           .verifyComplete();
    }
@@ -198,8 +208,11 @@ class KeycloakAuthAsyncClientImplTest extends KeycloakShareTestContainer {
       ).assertNext(response -> {
          assertThat(response.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
          assertThat(response.getMessage()).isEqualTo("Token is not active");
-         assertThat(response.getBody().getActive()).isFalse();
-         assertThat(response.getBody().getToken()).isNull();
+         assertThat(response.getBody()).isPresent();
+
+         VerifyTokenResult body = response.getBody().get();
+         assertThat(body.getActive()).isFalse();
+         assertThat(body.getToken()).isNull();
       }).verifyComplete();
    }
 

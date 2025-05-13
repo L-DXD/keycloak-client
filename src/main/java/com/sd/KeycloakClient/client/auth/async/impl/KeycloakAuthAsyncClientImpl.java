@@ -125,8 +125,9 @@ public class KeycloakAuthAsyncClientImpl implements KeycloakAuthAsyncClient {
       return http.<KeycloakJwksKeys>get(configuration.getJwksUrl())
           .responseType(KeycloakJwksKeys.class)
           .send()
-          .flatMap((response) -> getTokenKid(token)
-              .flatMap((kid) -> getMatchedJwks(kid, response.getBody().getKeys()))
+          .flatMap((response) -> Mono.justOrEmpty(response.getBody()))
+          .flatMap((body) -> getTokenKid(token)
+              .flatMap((kid) -> getMatchedJwks(kid, body.getKeys()))
               .flatMap(JWTUtil::makePublicKey)
               .flatMap((key) -> Mono.just(KeycloakResponse.of(HttpResponseStatus.OK.code(), "SUCCESS", key))))
           .onErrorResume(
@@ -146,7 +147,7 @@ public class KeycloakAuthAsyncClientImpl implements KeycloakAuthAsyncClient {
           .flatMap((response) -> Mono.just(
               KeycloakResponse.of(response.getStatus(), response.getMessage(), KeycloakAuthorizationResult.builder()
                   .granted(HttpResponseStatus.OK.code() == response.getStatus())
-                  .authorizationResponse(response.getBody())
+                  .authorizationResponse(response.getBody().orElse(null))
                   .build())));
    }
 
