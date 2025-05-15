@@ -1,5 +1,8 @@
 package com.sd.KeycloakClient.client.user.sync;
 
+import com.sd.KeycloakClient.dto.KeycloakResponse;
+import com.sd.KeycloakClient.dto.user.KeycloakUserInfo;
+
 /**
  * @author SangWonYu
  * @date 2025-04
@@ -12,6 +15,6 @@ public interface KeycloakUserClient {
     *
     * @param accessToken
     */
-   Object getUserInfo(String accessToken);
+   KeycloakResponse<KeycloakUserInfo> getUserInfo(String accessToken);
 
 }

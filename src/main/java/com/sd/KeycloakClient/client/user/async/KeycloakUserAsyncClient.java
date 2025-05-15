@@ -1,19 +1,17 @@
 package com.sd.KeycloakClient.client.user.async;
 
+import com.sd.KeycloakClient.dto.KeycloakResponse;
+import com.sd.KeycloakClient.dto.user.KeycloakUserInfo;
 import reactor.core.publisher.Mono;
 
-/**
- * @author SangWonYu
- * @date 2025-04-03
- * @description Keycloak client for user
- */
 public interface KeycloakUserAsyncClient {
 
    /**
-    * Async GET USER INFO
+    * Async get user info
     *
-    * @param accessToken
+    * @param accessToken access token
     */
-   Mono<Object> getUserInfo(String accessToken);
+   Mono<KeycloakResponse<KeycloakUserInfo>> getUserInfo(String accessToken);
+
 
 }
