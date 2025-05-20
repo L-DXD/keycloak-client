@@ -507,7 +507,7 @@
         "post.logout.redirect.uris": "+"
       },
       "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": false,
+      "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": 0,
       "defaultClientScopes": [
         "web-origins",
@@ -2377,6 +2377,43 @@
       "clientRoles": {
         "realm-management": [
           "realm-admin"
+        ]
+      }
+    },
+    {
+      "id": "test-admin-user-id",
+      "username": "test-admin-user-keycloak",
+      "email": "testAdmin@example.com",
+      "enabled": true,
+      "emailVerified": false,
+      "firstName": "Test",
+      "lastName": "Admin",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization",
+        "default-roles-test-realm"
+      ],
+      "clientRoles": {
+        "realm-management": [
+          "realm-admin",
+          "view-clients",
+          "query-groups",
+          "query-users",
+          "create-client",
+          "query-clients",
+          "manage-clients",
+          "view-realm",
+          "manage-users",
+          "view-users",
+          "view-authorization"
         ]
       }
     }

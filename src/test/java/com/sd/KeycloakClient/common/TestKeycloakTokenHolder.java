@@ -8,6 +8,7 @@ import java.util.Objects;
 public class TestKeycloakTokenHolder {
 
    private static String accessToken;
+   private static String adminAccessToken;
 
    public static synchronized String getAccessToken(KeycloakClient keycloakClient) {
       if (Objects.isNull(accessToken)) {
@@ -16,5 +17,14 @@ public class TestKeycloakTokenHolder {
          accessToken = keycloakTokenInfo.getAccessToken();
       }
       return accessToken;
+   }
+
+   public static synchronized String getAdminAccessToken(KeycloakClient keycloakClient) {
+      if (Objects.isNull(adminAccessToken)) {
+         KeycloakResponse<KeycloakTokenInfo> tokenInfo = keycloakClient.auth().basicAuth("test-admin-user-keycloak", "1234");
+         KeycloakTokenInfo keycloakTokenInfo = tokenInfo.getBody().orElseThrow(() -> new RuntimeException("fail to get admin token"));
+         adminAccessToken = keycloakTokenInfo.getAccessToken();
+      }
+      return adminAccessToken;
    }
 }
