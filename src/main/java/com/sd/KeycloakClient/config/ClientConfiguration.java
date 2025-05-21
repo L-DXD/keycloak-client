@@ -27,6 +27,9 @@ public class ClientConfiguration {
    private static final String LOGOUT_PATH = "/logout";
    private static final String USER_INFO_PATH = "/userinfo";
    private static final String CERTS = "/certs";
+   private static final String ADMIN_PATH = "/admin";
+   private static final String REALM_PATH = "/realms";
+   private static final String USER_PATH = "/users";
 
    private String getOidcUrl() {
       String oidcUrl = "";
@@ -56,5 +59,22 @@ public class ClientConfiguration {
    public String getUserInfoUrl() {
       return getOidcUrl() + USER_INFO_PATH;
    }
+
+   private String buildUserEndpointBasePath() {
+      String base = ADMIN_PATH + REALM_PATH + "/" + realmName + USER_PATH;
+      if (relativePath != null && !relativePath.isEmpty()) {
+         return relativePath + base;
+      }
+      return base;
+   }
+
+   public String getUserSearchUrl(String queryParam) {
+      String basePath = buildUserEndpointBasePath();
+      if (queryParam != null && !queryParam.isBlank()) {
+         return basePath + queryParam;
+      }
+      return basePath;
+   }
+
 
 }

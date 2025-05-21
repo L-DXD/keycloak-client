@@ -10,6 +10,8 @@ import static org.keycloak.OAuth2Constants.GRANT_TYPE;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.REDIRECT_URI;
 import static org.keycloak.OAuth2Constants.REFRESH_TOKEN;
+import static org.keycloak.OAuth2Constants.SCOPE;
+import static org.keycloak.OAuth2Constants.SCOPE_OPENID;
 import static org.keycloak.OAuth2Constants.TOKEN;
 import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
 import static org.keycloak.OAuth2Constants.USERNAME;
@@ -29,7 +31,7 @@ public class KeycloakEntities {
    public static final String URI_FORMAT = "uri";
 
    public static Map<String, Object> passwordEntities(String username, String password) {
-      return Map.of(GRANT_TYPE, PASSWORD, USERNAME, username, PASSWORD, password);
+      return Map.of(GRANT_TYPE, PASSWORD, USERNAME, username, PASSWORD, password, SCOPE, SCOPE_OPENID);
    }
 
    public static Map<String, Object> tokenEntities(String clientId, String secret, String redirectUri, String code) {
