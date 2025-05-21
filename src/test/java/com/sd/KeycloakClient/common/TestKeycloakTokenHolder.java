@@ -7,12 +7,16 @@ import java.util.Objects;
 
 public class TestKeycloakTokenHolder {
 
+   public static final String GENERAL_USER_NAME = "test-user-keycloak";
+   public static final String ADMIN_USER_NAME = "test-admin-user-keycloak";
+   private static final String PASSWORD = "1234";
+
    private static String accessToken;
    private static String adminAccessToken;
 
    public static synchronized String getAccessToken(KeycloakClient keycloakClient) {
       if (Objects.isNull(accessToken)) {
-         KeycloakResponse<KeycloakTokenInfo> tokenInfo = keycloakClient.auth().basicAuth("test-user-keycloak", "1234");
+         KeycloakResponse<KeycloakTokenInfo> tokenInfo = keycloakClient.auth().basicAuth(GENERAL_USER_NAME, PASSWORD);
          KeycloakTokenInfo keycloakTokenInfo = tokenInfo.getBody().orElseThrow(() -> new RuntimeException("fail to get token"));
          accessToken = keycloakTokenInfo.getAccessToken();
       }
@@ -21,7 +25,7 @@ public class TestKeycloakTokenHolder {
 
    public static synchronized String getAdminAccessToken(KeycloakClient keycloakClient) {
       if (Objects.isNull(adminAccessToken)) {
-         KeycloakResponse<KeycloakTokenInfo> tokenInfo = keycloakClient.auth().basicAuth("test-admin-user-keycloak", "1234");
+         KeycloakResponse<KeycloakTokenInfo> tokenInfo = keycloakClient.auth().basicAuth(ADMIN_USER_NAME, PASSWORD);
          KeycloakTokenInfo keycloakTokenInfo = tokenInfo.getBody().orElseThrow(() -> new RuntimeException("fail to get admin token"));
          adminAccessToken = keycloakTokenInfo.getAccessToken();
       }

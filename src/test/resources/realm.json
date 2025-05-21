@@ -2381,6 +2381,60 @@
       }
     },
     {
+      "id": "test-user-keycloak-id2",
+      "username": "test-user-keycloak2",
+      "email": "test2@example.com",
+      "enabled": true,
+      "emailVerified": false,
+      "firstName": "Test",
+      "lastName": "User",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization",
+        "default-roles-test-realm"
+      ],
+      "clientRoles": {
+        "realm-management": [
+          "realm-admin"
+        ]
+      }
+    },
+    {
+      "id": "test-user-keycloak-id3",
+      "username": "test-user-keycloak3",
+      "email": "test3@example.com",
+      "enabled": true,
+      "emailVerified": false,
+      "firstName": "Test",
+      "lastName": "User",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization",
+        "default-roles-test-realm"
+      ],
+      "clientRoles": {
+        "realm-management": [
+          "realm-admin"
+        ]
+      }
+    },
+    {
       "id": "test-admin-user-id",
       "username": "test-admin-user-keycloak",
       "email": "testAdmin@example.com",
