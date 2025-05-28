@@ -41,9 +41,9 @@ class KeycloakUserAsyncClientImplTest extends KeycloakShareTestContainer {
              assertThat(response.getBody()).isPresent();
 
              KeycloakUserInfo keycloakUserInfo = response.getBody().get();
-             assertThat(keycloakUserInfo.getEmail()).isEqualTo("test@example.com");
+             assertThat(keycloakUserInfo.getEmail()).isEqualTo("test2@example.com");
              assertThat(keycloakUserInfo.getName()).isEqualTo("Test User");
-             assertThat(keycloakUserInfo.getPreferredUsername()).isEqualTo("test-user-keycloak");
+             assertThat(keycloakUserInfo.getPreferredUsername()).isEqualTo("test-user-keycloak2");
              assertThat(keycloakUserInfo.getOtherInfo().get("given_name")).isEqualTo("Test");
           })
           .verifyComplete();
