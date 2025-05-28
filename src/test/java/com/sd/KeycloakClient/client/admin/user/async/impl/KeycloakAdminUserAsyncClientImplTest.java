@@ -38,7 +38,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    void searchByEmail() {
       // given
       UserQueryParams query = UserQueryParams.builder()
-          .email("test@example.com")
+          .email("test2@example.com")
           .build();
       Mono<KeycloakResponse<UserRepresentation[]>> searchUser = keycloakClient.adminUserAsync().searchUsers(adminAccessToken, query);
 
@@ -50,7 +50,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
 
              UserRepresentation[] users = response.getBody().get();
              assertThat(users.length).isEqualTo(1);
-             assertThat(users[0].getEmail()).isEqualTo("test@example.com");
+             assertThat(users[0].getEmail()).isEqualTo("test2@example.com");
           })
           .verifyComplete();
 
