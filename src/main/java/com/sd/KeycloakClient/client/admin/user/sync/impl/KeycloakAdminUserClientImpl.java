@@ -17,4 +17,9 @@ public class KeycloakAdminUserClientImpl implements KeycloakAdminUserClient {
       return adminUserClient.searchUsers(accessToken, params).block();
    }
 
+   @Override
+   public KeycloakResponse<Void> updateUserInfo(String accessToken, UserRepresentation userRepresentation) {
+      return adminUserClient.updateUserInfo(accessToken, userRepresentation).block();
+   }
+
 }

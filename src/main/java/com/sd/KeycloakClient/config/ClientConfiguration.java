@@ -76,5 +76,8 @@ public class ClientConfiguration {
       return basePath;
    }
 
+   public String getUserUrl(String userId) {
+      return buildUserEndpointBasePath() + "/" + userId;
+   }
 
 }

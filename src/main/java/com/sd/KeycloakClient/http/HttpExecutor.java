@@ -52,7 +52,7 @@ public class HttpExecutor<T> {
           .wiretap(true);
    }
 
-   private Map<AsciiString, Object> headers = new HashMap<>();
+   private Map<AsciiString, Object> headers = new HashMap<>(Map.of(CONTENT_TYPE, APPLICATION_JSON));
    private Map<String, Object> entities = new HashMap<>();
    private Class<T> responseType;
 

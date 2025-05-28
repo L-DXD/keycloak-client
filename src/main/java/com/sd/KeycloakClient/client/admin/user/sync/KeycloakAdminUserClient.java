@@ -16,4 +16,5 @@ public interface KeycloakAdminUserClient {
     */
    KeycloakResponse<UserRepresentation[]> searchUsers(String accessToken, UserQueryParams params);
 
+   KeycloakResponse<Void> updateUserInfo(String accessToken, UserRepresentation userRepresentation);
 }

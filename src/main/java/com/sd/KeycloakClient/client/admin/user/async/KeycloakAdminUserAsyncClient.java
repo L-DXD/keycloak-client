@@ -15,4 +15,6 @@ public interface KeycloakAdminUserAsyncClient {
     * @return Mono of KeycloakResponse containing an array of UserRepresentation objects
     */
    Mono<KeycloakResponse<UserRepresentation[]>> searchUsers(String accessToken, UserQueryParams params);
+
+   Mono<KeycloakResponse<Void>> updateUserInfo(String accessToken, UserRepresentation userRepresentation);
 }
