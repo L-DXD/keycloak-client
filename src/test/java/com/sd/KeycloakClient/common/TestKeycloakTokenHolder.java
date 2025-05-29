@@ -23,6 +23,10 @@ public class TestKeycloakTokenHolder {
       return accessToken;
    }
 
+   public static synchronized void removeAccessToken() {
+      accessToken = null;
+   }
+
    public static synchronized String getAdminAccessToken(KeycloakClient keycloakClient) {
       if (Objects.isNull(adminAccessToken)) {
          KeycloakResponse<KeycloakTokenInfo> tokenInfo = keycloakClient.auth().basicAuth(ADMIN_USER_NAME, PASSWORD);
@@ -30,5 +34,9 @@ public class TestKeycloakTokenHolder {
          adminAccessToken = keycloakTokenInfo.getAccessToken();
       }
       return adminAccessToken;
+   }
+
+   public static synchronized void removeAdminAccessToken() {
+      adminAccessToken = null;
    }
 }

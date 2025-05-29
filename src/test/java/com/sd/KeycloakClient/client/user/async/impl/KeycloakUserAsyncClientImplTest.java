@@ -10,6 +10,7 @@ import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.KeycloakUserInfo;
 import com.sd.KeycloakClient.factory.KeycloakClient;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,11 @@ class KeycloakUserAsyncClientImplTest extends KeycloakShareTestContainer {
    @BeforeEach
    void setup() {
       accessToken = TestKeycloakTokenHolder.getAccessToken(keycloakClient);
+   }
+
+   @AfterAll
+   static void afterAll() {
+      TestKeycloakTokenHolder.removeAccessToken();
    }
 
    @Test
