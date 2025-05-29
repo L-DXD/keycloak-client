@@ -38,7 +38,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    void searchByEmail() {
       // given
       UserQueryParams query = UserQueryParams.builder()
-          .email("test2@example.com")
+          .email("test@example.com")
           .build();
       Mono<KeycloakResponse<UserRepresentation[]>> searchUser = keycloakClient.adminUserAsync().searchUsers(adminAccessToken, query);
 
@@ -50,7 +50,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
 
              UserRepresentation[] users = response.getBody().get();
              assertThat(users.length).isEqualTo(1);
-             assertThat(users[0].getEmail()).isEqualTo("test2@example.com");
+             assertThat(users[0].getEmail()).isEqualTo("test@example.com");
           })
           .verifyComplete();
 
@@ -132,7 +132,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    @DisplayName("case5. change user info")
    void changeUserInfo() {
       // given
-      String originalEmail = "test@example.com";
+      String originalEmail = "test2@example.com";
       String changedEmail = "changed@example.com";
 
       UserQueryParams query = createQueryParams(originalEmail);
@@ -174,7 +174,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    @DisplayName("case6. change read only attribute")
    void changeReadOnlyAttribute() {
       // given
-      String originalEmail = "test@example.com";
+      String originalEmail = "test2@example.com";
       UserQueryParams query = createQueryParams(originalEmail);
 
       // call search user
