@@ -87,7 +87,7 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
       // given
       RoleRepresentation role = new RoleRepresentation();
       role.setId(TEST_ROLE_ID);
-      role.setName("ADMIN");
+      role.setName(TEST_GRANTED_ROLE);
 
       Mono<KeycloakResponse<Void>> grantRoleResponse = keycloakClient.roleAsync()
           .grantRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID, new RoleRepresentation[]{role});
@@ -107,7 +107,6 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
              assertThat(response.getBody()).isPresent();
 
              RoleRepresentation[] roles = response.getBody().get();
-             assertThat(roles.length).isGreaterThan(0);
              assertThat(Arrays.stream(roles).anyMatch(r -> r.getName().equals(TEST_GRANTED_ROLE))).isTrue();
           })
           .verifyComplete();
@@ -150,5 +149,55 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
              assertThat(response.getMessage()).contains("Role not found");
           })
           .verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case6. grant role & remove role")
+   void grantAndRemoveRole() {
+      // given
+      RoleRepresentation role = new RoleRepresentation();
+      role.setId(TEST_ROLE_ID);
+      role.setName(TEST_GRANTED_ROLE);
+
+      Mono<KeycloakResponse<Void>> grantRoleResponse = keycloakClient.roleAsync()
+          .grantRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID, new RoleRepresentation[]{role});
+      Mono<KeycloakResponse<Void>> removeRoleResponse = keycloakClient.roleAsync()
+          .removeRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID, new RoleRepresentation[]{role});
+      Mono<KeycloakResponse<RoleRepresentation[]>> userRole = keycloakClient.roleAsync()
+          .getUserRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID);
+
+      // when && then
+      StepVerifier.create(grantRoleResponse)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.NO_CONTENT.code()).isEqualTo(response.getStatus());
+          })
+          .verifyComplete();
+
+      StepVerifier.create(userRole)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isPresent();
+
+             RoleRepresentation[] roles = response.getBody().get();
+             assertThat(Arrays.stream(roles).anyMatch(r -> r.getName().equals(TEST_GRANTED_ROLE))).isTrue();
+
+          })
+          .verifyComplete();
+
+      StepVerifier.create(removeRoleResponse)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.NO_CONTENT.code()).isEqualTo(response.getStatus());
+          })
+          .verifyComplete();
+      StepVerifier.create(userRole)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isPresent();
+
+             RoleRepresentation[] roles = response.getBody().get();
+             assertThat(Arrays.stream(roles).anyMatch(r -> r.getName().equals(TEST_GRANTED_ROLE))).isFalse();
+          })
+          .verifyComplete();
+
    }
 }

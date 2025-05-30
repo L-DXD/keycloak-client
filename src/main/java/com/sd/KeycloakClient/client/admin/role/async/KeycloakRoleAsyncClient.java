@@ -12,4 +12,6 @@ public interface KeycloakRoleAsyncClient {
    Mono<KeycloakResponse<RoleRepresentation[]>> getUserRole(String accessToken, String userId, String clientUuid);
 
    Mono<KeycloakResponse<Void>> grantRole(String accessToken, String userId, String clientUuid, RoleRepresentation[] role);
+
+   Mono<KeycloakResponse<Void>> removeRole(String accessToken, String userId, String clientUuid, RoleRepresentation[] role);
 }

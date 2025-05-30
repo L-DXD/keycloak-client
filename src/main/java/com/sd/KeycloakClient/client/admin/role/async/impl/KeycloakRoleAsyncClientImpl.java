@@ -56,4 +56,20 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
           .responseType(Void.class)
           .send();
    }
+
+   @Override
+   public Mono<KeycloakResponse<Void>> removeRole(String accessToken, String userId, String clientUuid,
+       RoleRepresentation[] roles) {
+      String roleMappingPath = configuration.getRoleMappingPath(userId, clientUuid);
+      boolean notFoundAttribute = Arrays.stream(roles).anyMatch(role -> Objects.isNull(role.getName()) || Objects.isNull(role.getId()));
+      if (notFoundAttribute) {
+         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "Role id or role name is required", null));
+      }
+      return http.<Void>delete(roleMappingPath)
+          .applicationJson()
+          .entities(roles)
+          .authorizationBearer(accessToken)
+          .responseType(Void.class)
+          .send();
+   }
 }

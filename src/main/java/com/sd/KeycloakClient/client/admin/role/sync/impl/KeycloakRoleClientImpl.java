@@ -16,4 +16,19 @@ public class KeycloakRoleClientImpl implements KeycloakRoleClient {
    public KeycloakResponse<RoleRepresentation[]> getRoles(String accessToken, String clientUuid, RoleQueryParams queryParams) {
       return keycloakRoleClient.getRoles(accessToken, clientUuid, queryParams).block();
    }
+
+   @Override
+   public KeycloakResponse<RoleRepresentation[]> getUserRole(String accessToken, String userId, String clientUuid) {
+      return keycloakRoleClient.getUserRole(accessToken, userId, clientUuid).block();
+   }
+
+   @Override
+   public KeycloakResponse<Void> grantRole(String accessToken, String userId, String clientUuid, RoleRepresentation[] role) {
+      return keycloakRoleClient.grantRole(accessToken, userId, clientUuid, role).block();
+   }
+
+   @Override
+   public KeycloakResponse<Void> removeRole(String accessToken, String userId, String clientUuid, RoleRepresentation[] role) {
+      return keycloakRoleClient.removeRole(accessToken, userId, clientUuid, role).block();
+   }
 }
