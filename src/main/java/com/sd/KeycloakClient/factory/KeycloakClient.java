@@ -4,6 +4,10 @@ import com.sd.KeycloakClient.client.admin.client.async.KeycloakClientsAsyncClien
 import com.sd.KeycloakClient.client.admin.client.async.impl.KeycloakClientsAsyncClientImpl;
 import com.sd.KeycloakClient.client.admin.client.sync.KeycloakClientsClient;
 import com.sd.KeycloakClient.client.admin.client.sync.impl.KeycloakClientsClientImpl;
+import com.sd.KeycloakClient.client.admin.role.async.KeycloakRoleAsyncClient;
+import com.sd.KeycloakClient.client.admin.role.async.impl.KeycloakRoleAsyncClientImpl;
+import com.sd.KeycloakClient.client.admin.role.sync.KeycloakRoleClient;
+import com.sd.KeycloakClient.client.admin.role.sync.impl.KeycloakRoleClientImpl;
 import com.sd.KeycloakClient.client.admin.user.async.KeycloakAdminUserAsyncClient;
 import com.sd.KeycloakClient.client.admin.user.async.impl.KeycloakAdminUserAsyncClientImpl;
 import com.sd.KeycloakClient.client.admin.user.sync.KeycloakAdminUserClient;
@@ -34,6 +38,8 @@ public class KeycloakClient {
    private final KeycloakAdminUserClientImpl adminUserClient;
    private final KeycloakClientsAsyncClientImpl clientsAsyncClient;
    private final KeycloakClientsClientImpl clientsClient;
+   private final KeycloakRoleAsyncClientImpl roleAsyncClient;
+   private final KeycloakRoleClientImpl roleClient;
 
    public KeycloakClient(final ClientConfiguration config) {
       this.authAsyncClient = new KeycloakAuthAsyncClientImpl(config);
@@ -44,6 +50,8 @@ public class KeycloakClient {
       this.adminUserClient = new KeycloakAdminUserClientImpl(this.adminUserAsyncClient);
       this.clientsAsyncClient = new KeycloakClientsAsyncClientImpl(config);
       this.clientsClient = new KeycloakClientsClientImpl(this.clientsAsyncClient);
+      this.roleAsyncClient = new KeycloakRoleAsyncClientImpl(config);
+      this.roleClient = new KeycloakRoleClientImpl(this.roleAsyncClient);
    }
 
    public KeycloakAuthClient auth() {
@@ -76,5 +84,13 @@ public class KeycloakClient {
 
    public KeycloakAdminUserClient adminUser() {
       return this.adminUserClient;
+   }
+
+   public KeycloakRoleAsyncClient roleAsync() {
+      return this.roleAsyncClient;
+   }
+
+   public KeycloakRoleClient role() {
+      return this.roleClient;
    }
 }

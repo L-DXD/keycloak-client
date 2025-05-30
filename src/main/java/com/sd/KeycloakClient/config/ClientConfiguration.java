@@ -31,6 +31,8 @@ public class ClientConfiguration {
    private static final String REALM_PATH = "/realms";
    private static final String USER_PATH = "/users";
    private static final String CLIENTS_PATH = "/clients";
+   private static final String ROLES_PATH = "/roles";
+   private static final String ROLE_MAPPING_PATH = "/role-mappings";
 
    private String getOidcUrl() {
       String oidcUrl = "";
@@ -87,8 +89,16 @@ public class ClientConfiguration {
       return attachRelativePath(getBaseAdminPath() + CLIENTS_PATH);
    }
 
+   public String getClientsRolesPath(String clientUuid) {
+      return attachRelativePath(getBaseClientsPath()) + "/" + clientUuid + ROLES_PATH;
+   }
+
    public String getClientSearchUrl(String queryParam) {
       return attachQueryParam(getBaseClientsPath(), queryParam);
+   }
+
+   public String getRolesUrl(String clientUuid, String queryParam) {
+      return attachQueryParam(getClientsRolesPath(clientUuid), queryParam);
    }
 
    public String getUserSearchUrl(String queryParam) {
@@ -98,6 +108,4 @@ public class ClientConfiguration {
    public String getUserUrl(String userId) {
       return getBaseUserPath() + "/" + userId;
    }
-
-
 }
