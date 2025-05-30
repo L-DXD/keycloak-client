@@ -1,5 +1,9 @@
 package com.sd.KeycloakClient.factory;
 
+import com.sd.KeycloakClient.client.admin.client.async.KeycloakClientsAsyncClient;
+import com.sd.KeycloakClient.client.admin.client.async.impl.KeycloakClientsAsyncClientImpl;
+import com.sd.KeycloakClient.client.admin.client.sync.KeycloakClientsClient;
+import com.sd.KeycloakClient.client.admin.client.sync.impl.KeycloakClientsClientImpl;
 import com.sd.KeycloakClient.client.admin.user.async.KeycloakAdminUserAsyncClient;
 import com.sd.KeycloakClient.client.admin.user.async.impl.KeycloakAdminUserAsyncClientImpl;
 import com.sd.KeycloakClient.client.admin.user.sync.KeycloakAdminUserClient;
@@ -28,6 +32,8 @@ public class KeycloakClient {
    private final KeycloakUserAsyncClientImpl userAsyncClient;
    private final KeycloakAdminUserAsyncClientImpl adminUserAsyncClient;
    private final KeycloakAdminUserClientImpl adminUserClient;
+   private final KeycloakClientsAsyncClientImpl clientsAsyncClient;
+   private final KeycloakClientsClientImpl clientsClient;
 
    public KeycloakClient(final ClientConfiguration config) {
       this.authAsyncClient = new KeycloakAuthAsyncClientImpl(config);
@@ -36,6 +42,8 @@ public class KeycloakClient {
       this.userClient = new KeycloakUserClientImpl(this.userAsyncClient);
       this.adminUserAsyncClient = new KeycloakAdminUserAsyncClientImpl(config);
       this.adminUserClient = new KeycloakAdminUserClientImpl(this.adminUserAsyncClient);
+      this.clientsAsyncClient = new KeycloakClientsAsyncClientImpl(config);
+      this.clientsClient = new KeycloakClientsClientImpl(this.clientsAsyncClient);
    }
 
    public KeycloakAuthClient auth() {
@@ -52,6 +60,14 @@ public class KeycloakClient {
 
    public KeycloakUserAsyncClient userAsync() {
       return this.userAsyncClient;
+   }
+
+   public KeycloakClientsAsyncClient clientsAsync() {
+      return this.clientsAsyncClient;
+   }
+
+   public KeycloakClientsClient clients() {
+      return this.clientsClient;
    }
 
    public KeycloakAdminUserAsyncClient adminUserAsync() {
