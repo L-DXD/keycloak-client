@@ -42,7 +42,7 @@ class KeycloakClientsAsyncClientImplTest extends KeycloakShareTestContainer {
    void searchClientByClientId() {
       // given
       ClientQueryParams query = ClientQueryParams.builder()
-          .clientId("account")
+          .clientId("prm-client")
           .build();
       Mono<KeycloakResponse<ClientRepresentation[]>> searchClient = keycloakClient.clientsAsync().getClientsInfo(adminAccessToken, query);
 
@@ -54,7 +54,7 @@ class KeycloakClientsAsyncClientImplTest extends KeycloakShareTestContainer {
 
              ClientRepresentation[] clientRepresentations = response.getBody().get();
              assertThat(clientRepresentations.length).isEqualTo(1);
-             assertThat(clientRepresentations[0].getClientId()).isEqualTo("account");
+             assertThat(clientRepresentations[0].getClientId()).isEqualTo("prm-client");
 
           })
           .verifyComplete();

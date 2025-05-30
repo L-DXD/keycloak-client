@@ -53,7 +53,7 @@ public class HttpExecutor<T> {
    }
 
    private Map<AsciiString, Object> headers = new HashMap<>(Map.of(CONTENT_TYPE, APPLICATION_JSON));
-   private Map<String, Object> entities = new HashMap<>();
+   private Object entities = new HashMap<>();
    private Class<T> responseType;
 
    private final ObjectMapper objectMapper = new ObjectMapper();
@@ -89,7 +89,7 @@ public class HttpExecutor<T> {
       return this;
    }
 
-   public HttpExecutor<T> entities(final Map<String, Object> entities) {
+   public HttpExecutor<T> entities(final Object entities) {
       this.entities = entities;
       return this;
    }
@@ -142,7 +142,12 @@ public class HttpExecutor<T> {
 
    private ByteBufFlux getSendDataByHeader() throws JsonProcessingException {
       if (this.headers.get(CONTENT_TYPE).equals(APPLICATION_X_WWW_FORM_URLENCODED)) {
-         return ByteBufFlux.fromString(Mono.just(toUrlEncoded(entities)));
+         if (!(entities instanceof Map)) {
+            throw new IllegalArgumentException("Only Map<String, Object> is allowed for content type application/x-www-form-urlencoded.");
+         }
+         @SuppressWarnings("unchecked")
+         Map<String, Object> formMap = (Map<String, Object>) entities;
+         return ByteBufFlux.fromString(Mono.just(toUrlEncoded(formMap)));
       }
 
       String jsonBody = objectMapper.writeValueAsString(entities);

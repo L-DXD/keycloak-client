@@ -88,6 +88,34 @@
       }
     ],
     "client": {
+      "prm-client": [
+        {
+          "id": "42d141e6-d6e5-4650-8b71-2cecb5ea4bd0",
+          "name": "uma_protection",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "de5fe303-2e50-428e-ac72-b81d1dc5139a",
+          "attributes": {}
+        },
+        {
+          "id": "53c49637-b8de-4f2b-85f7-f7b27740e7ef",
+          "name": "PRM",
+          "description": "prm role",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "de5fe303-2e50-428e-ac72-b81d1dc5139a",
+          "attributes": {}
+        },
+        {
+          "id": "13c39667-c8df-2d2a-15n7-v3c21700e3if",
+          "name": "ADMIN",
+          "description": "admin role",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "de5fe303-2e50-428e-ac72-b81d1dc5139a",
+          "attributes": {}
+        }
+      ],
       "realm-management": [
         {
           "id": "0d2855fe-6ba0-49d0-95d5-d6a1dba18649",
@@ -477,6 +505,286 @@
     ]
   },
   "clients": [
+    {
+      "id": "de5fe303-2e50-428e-ac72-b81d1dc5139a",
+      "clientId": "prm-client",
+      "name": "",
+      "description": "",
+      "rootUrl": "https://prmdev.bearfamily.co.kr",
+      "adminUrl": "https://prmdev.bearfamily.co.kr",
+      "baseUrl": "https://prmdev.bearfamily.co.kr",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "prm-secret",
+      "redirectUris": [
+        "https://prmdev.bearfamily.co.kr/login/oauth2/code/keycloak",
+        "http://10.254.0.7:1190/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [
+        "https://prmdev.bearfamily.co.kr"
+      ],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "client.secret.creation.time": "1729143150",
+        "client.introspection.response.allow.jwt.claim.enabled": "false",
+        "post.logout.redirect.uris": "https://prmdev.bearfamily.co.kr/prm-service/logout.do",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "use.refresh.tokens": "true",
+        "realm_client": "false",
+        "oidc.ciba.grant.enabled": "false",
+        "client.use.lightweight.access.token.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "client_credentials.use_refresh_token": "false",
+        "acr.loa.map": "{}",
+        "require.pushed.authorization.requests": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
+        "display.on.consent.screen": "false",
+        "token.response.type.bearer.lower-case": "false"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "id": "c13f70b6-03cc-436b-9f67-acfd6c71ff96",
+          "name": "Client ID",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usersessionmodel-note-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.session.note": "client_id",
+            "id.token.claim": "true",
+            "introspection.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "client_id",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "id": "d7c62ad6-56b8-4e45-a804-b8f8e977d7f6",
+          "name": "Client IP Address",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usersessionmodel-note-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.session.note": "clientAddress",
+            "id.token.claim": "true",
+            "introspection.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "clientAddress",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "id": "724ed287-52f7-4fe2-b2f1-5c7af7d55659",
+          "name": "Client Host",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usersessionmodel-note-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.session.note": "clientHost",
+            "id.token.claim": "true",
+            "introspection.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "clientHost",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "attribute_scope",
+        "basic",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "organization",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "authorizationSettings": {
+        "allowRemoteResourceManagement": true,
+        "policyEnforcementMode": "ENFORCING",
+        "resources": [
+          {
+            "name": "home",
+            "type": "prm-client:home",
+            "ownerManagedAccess": false,
+            "displayName": "home",
+            "attributes": {},
+            "uris": [
+              "/prm-service/v2/main.do"
+            ],
+            "scopes": [
+              {
+                "name": "PATCH"
+              },
+              {
+                "name": "GET"
+              },
+              {
+                "name": "POST"
+              }
+            ],
+            "icon_uri": ""
+          },
+          {
+            "name": "도매 주문",
+            "type": "prm-client:order",
+            "ownerManagedAccess": false,
+            "displayName": "도매 주문 Resource",
+            "attributes": {},
+            "uris": [
+              "/prm-service/resources/js/common/select2.min.js"
+            ],
+            "scopes": [
+              {
+                "name": "PATCH"
+              },
+              {
+                "name": "GET"
+              },
+              {
+                "name": "POST"
+              }
+            ],
+            "icon_uri": ""
+          }
+        ],
+        "policies": [
+          {
+            "name": "policy",
+            "description": "모든 접근 정책",
+            "type": "group",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "groups": "[]",
+              "groupsClaim": ""
+            }
+          },
+          {
+            "name": "MR Role Policy",
+            "description": "MR Role",
+            "type": "role",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "fetchRoles": "false",
+              "roles": "[{\"id\":\"MR\",\"required\":true}]"
+            }
+          },
+          {
+            "name": "BIZ_M_ROLE",
+            "description": "",
+            "type": "role",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "fetchRoles": "false",
+              "roles": "[{\"id\":\"BIZ_M\",\"required\":true}]"
+            }
+          },
+          {
+            "name": "Time Policy",
+            "description": "",
+            "type": "time",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "hourEnd": "23",
+              "monthEnd": "12",
+              "noa": "2024-12-10 18:00:00",
+              "minuteEnd": "59",
+              "nbf": "2024-12-10 9:00:00",
+              "hour": "0",
+              "month": "1",
+              "dayMonth": "1",
+              "dayMonthEnd": "31",
+              "minute": "0"
+            }
+          },
+          {
+            "name": "SM_ROLE",
+            "description": "",
+            "type": "role",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "fetchRoles": "false",
+              "roles": "[{\"id\":\"SM\",\"required\":true}]"
+            }
+          },
+          {
+            "name": "Order Permission",
+            "description": "",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "resources": "[\"도매 주문\"]",
+              "applyPolicies": "[\"SM_ROLE\"]"
+            }
+          },
+          {
+            "name": "TEST",
+            "description": "",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "resources": "[\"home\"]",
+              "applyPolicies": "[\"MR Role Policy\"]"
+            }
+          }
+        ],
+        "scopes": [
+          {
+            "name": "GET",
+            "iconUri": ""
+          },
+          {
+            "name": "DELETE",
+            "iconUri": ""
+          },
+          {
+            "name": "PATCH",
+            "iconUri": ""
+          },
+          {
+            "name": "order",
+            "iconUri": ""
+          },
+          {
+            "name": "PUT",
+            "iconUri": ""
+          },
+          {
+            "name": "POST",
+            "iconUri": ""
+          }
+        ],
+        "decisionStrategy": "UNANIMOUS"
+      }
+    },
     {
       "id": "7ecf548d-849e-433d-9b45-e02110ecceda",
       "clientId": "account",
