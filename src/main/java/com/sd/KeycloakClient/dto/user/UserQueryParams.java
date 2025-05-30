@@ -54,7 +54,6 @@ public class UserQueryParams {
    /**
     * Index of the first user to return (used for pagination). Defaults to 0 if not specified.
     */
-
    private Integer first;
    /**
     * Maximum number of users to return (used for pagination).

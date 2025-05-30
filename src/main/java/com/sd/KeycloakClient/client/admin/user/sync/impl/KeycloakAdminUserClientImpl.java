@@ -7,7 +7,7 @@ import com.sd.KeycloakClient.dto.user.UserQueryParams;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.UserRepresentation;
 
-@RequiredArgsConstructor()
+@RequiredArgsConstructor
 public class KeycloakAdminUserClientImpl implements KeycloakAdminUserClient {
 
    private final KeycloakAdminUserAsyncClient adminUserClient;

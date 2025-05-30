@@ -30,6 +30,7 @@ public class ClientConfiguration {
    private static final String ADMIN_PATH = "/admin";
    private static final String REALM_PATH = "/realms";
    private static final String USER_PATH = "/users";
+   private static final String CLIENTS_PATH = "/clients";
 
    private String getOidcUrl() {
       String oidcUrl = "";
@@ -60,24 +61,43 @@ public class ClientConfiguration {
       return getOidcUrl() + USER_INFO_PATH;
    }
 
-   private String buildUserEndpointBasePath() {
-      String base = ADMIN_PATH + REALM_PATH + "/" + realmName + USER_PATH;
+   public String getBaseAdminPath() {
+      return ADMIN_PATH + REALM_PATH + "/" + realmName;
+   }
+
+   private String attachRelativePath(String path) {
       if (relativePath != null && !relativePath.isEmpty()) {
-         return relativePath + base;
+         return relativePath + path;
       }
-      return base;
+      return path;
+   }
+
+   private String attachQueryParam(String path, String queryParam) {
+      if (queryParam != null && !queryParam.isBlank()) {
+         return path + queryParam;
+      }
+      return path;
+   }
+
+   private String getBaseUserPath() {
+      return attachRelativePath(getBaseAdminPath() + USER_PATH);
+   }
+
+   private String getBaseClientsPath() {
+      return attachRelativePath(getBaseAdminPath() + CLIENTS_PATH);
+   }
+
+   public String getClientSearchUrl(String queryParam) {
+      return attachQueryParam(getBaseClientsPath(), queryParam);
    }
 
    public String getUserSearchUrl(String queryParam) {
-      String basePath = buildUserEndpointBasePath();
-      if (queryParam != null && !queryParam.isBlank()) {
-         return basePath + queryParam;
-      }
-      return basePath;
+      return attachQueryParam(getBaseUserPath(), queryParam);
    }
 
    public String getUserUrl(String userId) {
-      return buildUserEndpointBasePath() + "/" + userId;
+      return getBaseUserPath() + "/" + userId;
    }
+
 
 }
