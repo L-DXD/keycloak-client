@@ -75,4 +75,27 @@ class KeycloakClientsAsyncClientImplTest extends KeycloakShareTestContainer {
              assertThat(HttpResponseStatus.FORBIDDEN.code()).isEqualTo(response.getStatus());
           });
    }
+
+   @Test
+   @DisplayName("case3. no clientId")
+   void notFoundClientId() {
+      // given
+      ClientQueryParams query = ClientQueryParams.builder()
+          .clientId("prm-client-test")
+          .build();
+      Mono<KeycloakResponse<ClientRepresentation[]>> searchClient = keycloakClient.clientsAsync().getClientsInfo(adminAccessToken, query);
+
+      // when & then
+      StepVerifier.create(searchClient)
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isPresent();
+
+             ClientRepresentation[] clientRepresentations = response.getBody().get();
+             assertThat(clientRepresentations.length).isEqualTo(0);
+
+          })
+          .verifyComplete();
+
+   }
 }
