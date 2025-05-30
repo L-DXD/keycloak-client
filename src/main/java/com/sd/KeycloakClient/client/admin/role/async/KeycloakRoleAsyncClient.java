@@ -8,4 +8,8 @@ import reactor.core.publisher.Mono;
 public interface KeycloakRoleAsyncClient {
 
    Mono<KeycloakResponse<RoleRepresentation[]>> getRoles(String accessToken, String clientUuid, RoleQueryParams queryParams);
+
+   Mono<KeycloakResponse<RoleRepresentation[]>> getUserRole(String accessToken, String userId, String clientUuid);
+
+   Mono<KeycloakResponse<Void>> grantRole(String accessToken, String userId, String clientUuid, RoleRepresentation[] role);
 }

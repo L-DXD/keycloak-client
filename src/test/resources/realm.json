@@ -105,6 +105,15 @@
           "clientRole": true,
           "containerId": "de5fe303-2e50-428e-ac72-b81d1dc5139a",
           "attributes": {}
+        },
+        {
+          "id": "13c39667-c8df-2d2a-15n7-v3c21700e3if",
+          "name": "ADMIN",
+          "description": "admin role",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "de5fe303-2e50-428e-ac72-b81d1dc5139a",
+          "attributes": {}
         }
       ],
       "realm-management": [

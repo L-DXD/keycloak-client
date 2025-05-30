@@ -9,6 +9,7 @@ import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.admin.RoleQueryParams;
 import com.sd.KeycloakClient.factory.KeycloakClient;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import java.util.Arrays;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +24,9 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
    private static KeycloakClient keycloakClient;
    private static final String TEST_CLIENT_UUID = "de5fe303-2e50-428e-ac72-b81d1dc5139a";
    private static final String TEST_INVALID_CLIENT_UUID = "aaaaaa-2e50-428e-ac72-b81d1dc5139a";
+   private static final String TEST_ROLE_ID = "13c39667-c8df-2d2a-15n7-v3c21700e3if";
+   private static final String TEST_GRANTED_USER = "test-user-keycloak-id2";
+   private static final String TEST_GRANTED_ROLE = "ADMIN";
 
    private String adminAccessToken;
 
@@ -54,7 +58,7 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
 
              RoleRepresentation[] roles = response.getBody().get();
              assertThat(roles.length).isGreaterThan(1);
-             assertThat(roles[1].getName()).isEqualTo("PRM");
+             assertThat(Arrays.stream(roles).anyMatch(r -> r.getName().equals("PRM"))).isTrue();
           })
           .verifyComplete();
    }
@@ -73,6 +77,77 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
       StepVerifier.create(rolesResponse)
           .assertNext((response) -> {
              assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
+          })
+          .verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case3. role mapping")
+   void roleMapping() {
+      // given
+      RoleRepresentation role = new RoleRepresentation();
+      role.setId(TEST_ROLE_ID);
+      role.setName("ADMIN");
+
+      Mono<KeycloakResponse<Void>> grantRoleResponse = keycloakClient.roleAsync()
+          .grantRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID, new RoleRepresentation[]{role});
+      Mono<KeycloakResponse<RoleRepresentation[]>> userRole = keycloakClient.roleAsync()
+          .getUserRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID);
+
+      // when && then
+      StepVerifier.create(grantRoleResponse)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.NO_CONTENT.code()).isEqualTo(response.getStatus());
+          })
+          .verifyComplete();
+
+      StepVerifier.create(userRole)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isPresent();
+
+             RoleRepresentation[] roles = response.getBody().get();
+             assertThat(roles.length).isGreaterThan(0);
+             assertThat(Arrays.stream(roles).anyMatch(r -> r.getName().equals(TEST_GRANTED_ROLE))).isTrue();
+          })
+          .verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case4. required field error")
+   void noRoleIdOrName() {
+      // given
+      RoleRepresentation role = new RoleRepresentation();
+
+      Mono<KeycloakResponse<Void>> grantRoleResponse = keycloakClient.roleAsync()
+          .grantRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID, new RoleRepresentation[]{role});
+
+      // when && then
+      StepVerifier.create(grantRoleResponse)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.BAD_REQUEST.code()).isEqualTo(response.getStatus());
+             assertThat(response.getMessage()).contains("Role id or role name is required");
+          })
+          .verifyComplete();
+
+   }
+
+   @Test
+   @DisplayName("case5. does not exist role mapping")
+   void notRoleMapping() {
+      // given
+      RoleRepresentation role = new RoleRepresentation();
+      role.setId("NONE");
+      role.setName("ADMIN");
+
+      Mono<KeycloakResponse<Void>> grantRoleResponse = keycloakClient.roleAsync()
+          .grantRole(adminAccessToken, TEST_GRANTED_USER, TEST_CLIENT_UUID, new RoleRepresentation[]{role});
+
+      // when && then
+      StepVerifier.create(grantRoleResponse)
+          .assertNext((response) -> {
+             assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
+             assertThat(response.getMessage()).contains("Role not found");
           })
           .verifyComplete();
    }
