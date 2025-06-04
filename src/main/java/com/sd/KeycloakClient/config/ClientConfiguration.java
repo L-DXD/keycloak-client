@@ -90,11 +90,11 @@ public class ClientConfiguration {
    }
 
    public String getRoleMappingPath(String userId, String clientUuid) {
-      return attachRelativePath(getBaseUserPath()) + "/" + userId + ROLE_MAPPING_PATH + CLIENTS_PATH + "/" + clientUuid;
+      return getBaseUserPath() + "/" + userId + ROLE_MAPPING_PATH + CLIENTS_PATH + "/" + clientUuid;
    }
 
    public String getClientsRolesPath(String clientUuid) {
-      return attachRelativePath(getBaseClientsPath()) + "/" + clientUuid + ROLES_PATH;
+      return getBaseClientsPath() + "/" + clientUuid + ROLES_PATH;
    }
 
    public String getClientSearchUrl(String queryParam) {
