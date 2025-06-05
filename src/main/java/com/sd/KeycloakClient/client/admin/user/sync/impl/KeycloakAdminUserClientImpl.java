@@ -22,4 +22,9 @@ public class KeycloakAdminUserClientImpl implements KeycloakAdminUserClient {
       return adminUserClient.updateUserInfo(accessToken, userRepresentation).block();
    }
 
+   @Override
+   public KeycloakResponse<UserRepresentation> findByUserId(String accessToken, String userId) {
+      return adminUserClient.findByUserId(accessToken, userId).block();
+   }
+
 }

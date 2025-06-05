@@ -45,4 +45,14 @@ public class KeycloakAdminUserAsyncClientImpl implements KeycloakAdminUserAsyncC
           .send();
    }
 
+   @Override
+   public Mono<KeycloakResponse<UserRepresentation>> findByUserId(String accessToken, String userId) {
+      String url = configuration.getUserUrl(userId);
+      return http.<UserRepresentation>get(url)
+          .authorizationBearer(accessToken)
+          .applicationJson()
+          .responseType(UserRepresentation.class)
+          .send();
+   }
+
 }

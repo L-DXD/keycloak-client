@@ -27,6 +27,10 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    private String adminAccessToken;
    private String accessToken;
 
+   private static final String TEST_USER_ID = "test-user-keycloak-id3";
+   private static final String TEST_USER_NAME = "test-user-keycloak3";
+   private static final String TEST_USER_EMAIL = "test3@example.com";
+
    @BeforeEach
    void setup() {
       adminAccessToken = TestKeycloakTokenHolder.getAdminAccessToken(keycloakClient);
@@ -200,6 +204,36 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
           })
           .verifyComplete();
 
+   }
+
+   @Test
+   @DisplayName("case7. find by user id")
+   void findByUserId() {
+      // when && then
+      Mono<KeycloakResponse<UserRepresentation>> userInfo = keycloakClient.adminUserAsync().findByUserId(adminAccessToken, TEST_USER_ID);
+      StepVerifier.create(userInfo)
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isPresent();
+
+             UserRepresentation userRepresentation = response.getBody().get();
+             assertThat(userRepresentation.getId()).isEqualTo(TEST_USER_ID);
+             assertThat(userRepresentation.getUsername()).isEqualTo(TEST_USER_NAME);
+             assertThat(userRepresentation.getEmail()).isEqualTo(TEST_USER_EMAIL);
+          }).verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case8. find by user id - not found")
+   void findByUserIdNotFound() {
+      // when && then
+      Mono<KeycloakResponse<UserRepresentation>> userInfo = keycloakClient.adminUserAsync()
+          .findByUserId(adminAccessToken, "NOT_FOUND_USER_ID");
+      StepVerifier.create(userInfo)
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isEmpty();
+          }).verifyComplete();
    }
 
    private void updateReadOnlyAttribute(UserRepresentation user) {
