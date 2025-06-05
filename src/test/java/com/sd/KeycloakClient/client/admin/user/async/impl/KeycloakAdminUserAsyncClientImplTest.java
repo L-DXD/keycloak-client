@@ -231,8 +231,9 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
           .findByUserId(adminAccessToken, "NOT_FOUND_USER_ID");
       StepVerifier.create(userInfo)
           .assertNext(response -> {
-             assertThat(HttpResponseStatus.OK.code()).isEqualTo(response.getStatus());
+             assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
              assertThat(response.getBody()).isEmpty();
+             assertThat(response.getMessage()).contains("User not found");
           }).verifyComplete();
    }
 
