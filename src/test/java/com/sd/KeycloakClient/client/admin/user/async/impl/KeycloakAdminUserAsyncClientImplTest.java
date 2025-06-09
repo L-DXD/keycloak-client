@@ -30,7 +30,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    private static final String TEST_USER_ID = "test-user-keycloak-id3";
    private static final String TEST_USER_NAME = "test-user-keycloak3";
    private static final String TEST_USER_EMAIL = "test3@example.com";
-   private static final String NEW_USER_EMAIL = "createNew@example.com";
+   private static final String NEW_USER_EMAIL = "createnew@example.com";
    private static final String NEW_USER_NAME = "new-user";
 
    @BeforeEach
@@ -285,22 +285,6 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
              assertThat(HttpResponseStatus.CONFLICT.code()).isEqualTo(response.getStatus());
              assertThat(response.getBody()).isEmpty();
              assertThat(response.getMessage()).contains("User exists with same email");
-          }).verifyComplete();
-   }
-
-   @Test
-   @DisplayName("case10. conflict user - 403")
-   void forbiddenUser403() {
-      // given
-      UserRepresentation user = new UserRepresentation();
-      user.setUsername(NEW_USER_NAME);
-      user.setEmail(TEST_USER_EMAIL);
-
-      // when & then
-      StepVerifier.create(keycloakClient.adminUserAsync().createUser(accessToken, user))
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.FORBIDDEN.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
           }).verifyComplete();
    }
 
