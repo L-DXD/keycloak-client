@@ -27,4 +27,9 @@ public class KeycloakAdminUserClientImpl implements KeycloakAdminUserClient {
       return adminUserClient.findByUserId(accessToken, userId).block();
    }
 
+   @Override
+   public KeycloakResponse<Void> createUser(String accessToken, UserRepresentation userRepresentation) {
+      return adminUserClient.createUser(accessToken, userRepresentation).block();
+   }
+
 }

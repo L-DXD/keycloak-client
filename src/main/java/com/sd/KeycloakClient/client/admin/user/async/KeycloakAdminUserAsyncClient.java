@@ -32,4 +32,24 @@ public interface KeycloakAdminUserAsyncClient {
     * @return a Mono wrapping the KeycloakResponse containing the UserRepresentation if found
     */
    Mono<KeycloakResponse<UserRepresentation>> findByUserId(String accessToken, String userId);
+
+   /**
+    * Creates a new user in the Keycloak realm using the provided access token and user information.
+    *
+    * @param accessToken        A valid admin access token with permissions to create users.
+    * @param userRepresentation The representation of the user to be created, including username, email, credentials (password), and
+    *                           optional attributes.
+    * @return A {@link Mono} emitting the {@link KeycloakResponse} object containing the HTTP response status and message. The body is
+    * {@code null} since the creation API does not return a payload.
+    *
+    * <p>Typical HTTP response codes:
+    * <ul>
+    *   <li>201 Created – User was successfully created.</li>
+    *   <li>409 Conflict – A user with the same username or email already exists.</li>
+    *   <li>401 Unauthorized – Invalid or missing access token.</li>
+    *   <li>403 Forbidden – Insufficient permissions to create a user.</li>
+    * </ul>
+    * @see org.keycloak.representations.idm.UserRepresentation
+    */
+   Mono<KeycloakResponse<Void>> createUser(String accessToken, UserRepresentation userRepresentation);
 }

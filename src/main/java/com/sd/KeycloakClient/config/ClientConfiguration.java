@@ -81,7 +81,7 @@ public class ClientConfiguration {
       return path;
    }
 
-   private String getBaseUserPath() {
+   public String getBaseUserPath() {
       return attachRelativePath(getBaseAdminPath() + USER_PATH);
    }
 

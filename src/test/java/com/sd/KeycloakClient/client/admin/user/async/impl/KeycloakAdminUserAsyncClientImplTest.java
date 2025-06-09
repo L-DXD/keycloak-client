@@ -30,6 +30,8 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    private static final String TEST_USER_ID = "test-user-keycloak-id3";
    private static final String TEST_USER_NAME = "test-user-keycloak3";
    private static final String TEST_USER_EMAIL = "test3@example.com";
+   private static final String NEW_USER_EMAIL = "createNew@example.com";
+   private static final String NEW_USER_NAME = "new-user";
 
    @BeforeEach
    void setup() {
@@ -234,6 +236,86 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
              assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
              assertThat(response.getBody()).isEmpty();
              assertThat(response.getMessage()).contains("User not found");
+          }).verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case9. create user - 201")
+   void createUser() {
+      // given
+      UserRepresentation user = new UserRepresentation();
+      user.setUsername(NEW_USER_NAME);
+      user.setEmail(NEW_USER_EMAIL);
+
+      // when & then
+      StepVerifier.create(keycloakClient.adminUserAsync().createUser(adminAccessToken, user))
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.CREATED.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isEmpty();
+          }).verifyComplete();
+
+      UserQueryParams changedEmailQuery = createQueryParams(NEW_USER_EMAIL);
+      Mono<KeycloakResponse<UserRepresentation[]>> researchUser = keycloakClient.adminUserAsync()
+          .searchUsers(adminAccessToken, changedEmailQuery);
+
+      StepVerifier.create(researchUser)
+          .assertNext(updateResponse -> {
+             assertThat(HttpResponseStatus.OK.code()).isEqualTo(updateResponse.getStatus());
+             assertThat(updateResponse.getBody()).isPresent();
+
+             UserRepresentation[] updatedUser = updateResponse.getBody().get();
+             assertThat(updatedUser.length).isEqualTo(1);
+             assertThat(updatedUser[0].getEmail()).isEqualTo(NEW_USER_EMAIL);
+             assertThat(updatedUser[0].getUsername()).isEqualTo(NEW_USER_NAME);
+          })
+          .verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case10. conflict user - 409")
+   void conflictUser409() {
+      // given
+      UserRepresentation user = new UserRepresentation();
+      user.setUsername(NEW_USER_NAME);
+      user.setEmail(TEST_USER_EMAIL);
+
+      // when & then
+      StepVerifier.create(keycloakClient.adminUserAsync().createUser(adminAccessToken, user))
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.CONFLICT.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isEmpty();
+             assertThat(response.getMessage()).contains("User exists with same email");
+          }).verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case10. conflict user - 403")
+   void forbiddenUser403() {
+      // given
+      UserRepresentation user = new UserRepresentation();
+      user.setUsername(NEW_USER_NAME);
+      user.setEmail(TEST_USER_EMAIL);
+
+      // when & then
+      StepVerifier.create(keycloakClient.adminUserAsync().createUser(accessToken, user))
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.FORBIDDEN.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isEmpty();
+          }).verifyComplete();
+   }
+
+   @Test
+   @DisplayName("case11. not enough required field - 400")
+   void requiredField400() {
+      // given
+      UserRepresentation user = new UserRepresentation();
+      user.setEmail(NEW_USER_EMAIL);
+
+      // when & then
+      StepVerifier.create(keycloakClient.adminUserAsync().createUser(accessToken, user))
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.BAD_REQUEST.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isEmpty();
           }).verifyComplete();
    }
 
