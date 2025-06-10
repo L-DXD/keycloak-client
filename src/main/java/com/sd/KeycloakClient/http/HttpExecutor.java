@@ -112,14 +112,15 @@ public class HttpExecutor<T> {
           .flatMap((responseBody) -> {
              int statusCode = response.status().code();
              String reason = response.status().reasonPhrase();
+             String location = response.responseHeaders().get("Location");
 
              // 204 No Content
              if (statusCode == NO_CONTENT.code()) {
-                return Mono.just(KeycloakResponse.of(statusCode, response.status().reasonPhrase(), null));
+                return Mono.just(KeycloakResponse.of(statusCode, response.status().reasonPhrase(), null, location));
              }
              // 3XX Redirection
              if (statusCode >= 300 && statusCode < 400) {
-                return Mono.just(KeycloakResponse.of(statusCode, reason, null));
+                return Mono.just(KeycloakResponse.of(statusCode, reason, null, location));
              }
 
              // 2XX
@@ -130,13 +131,13 @@ public class HttpExecutor<T> {
                       parsed = objectMapper.readValue(responseBody, responseType);
                    }
 
-                   return Mono.just(KeycloakResponse.of(statusCode, reason, parsed));
+                   return Mono.just(KeycloakResponse.of(statusCode, reason, parsed, location));
                 } catch (JsonProcessingException e) {
                    return Mono.error(new RuntimeException("Error parsing JSON response.", e));
                 }
              }
 
-             return Mono.just(KeycloakResponse.of(statusCode, reason + " : " + responseBody, null));
+             return Mono.just(KeycloakResponse.of(statusCode, reason + " : " + responseBody, null, location));
           })));
    }
 
