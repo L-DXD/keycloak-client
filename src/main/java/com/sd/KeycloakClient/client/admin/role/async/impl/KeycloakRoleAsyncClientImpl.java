@@ -47,7 +47,7 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
       String roleMappingPath = configuration.getRoleMappingPath(userId, clientUuid);
       boolean notFoundAttribute = Arrays.stream(roles).anyMatch(role -> Objects.isNull(role.getName()) || Objects.isNull(role.getId()));
       if (notFoundAttribute) {
-         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "Role id or role name is required", null));
+         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "Role id or role name is required", null, null));
       }
       return http.<Void>post(roleMappingPath)
           .applicationJson()
@@ -63,7 +63,7 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
       String roleMappingPath = configuration.getRoleMappingPath(userId, clientUuid);
       boolean notFoundAttribute = Arrays.stream(roles).anyMatch(role -> Objects.isNull(role.getName()) || Objects.isNull(role.getId()));
       if (notFoundAttribute) {
-         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "Role id or role name is required", null));
+         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "Role id or role name is required", null, null));
       }
       return http.<Void>delete(roleMappingPath)
           .applicationJson()

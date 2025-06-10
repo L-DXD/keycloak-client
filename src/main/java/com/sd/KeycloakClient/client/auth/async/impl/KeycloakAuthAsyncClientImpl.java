@@ -111,12 +111,13 @@ public class KeycloakAuthAsyncClientImpl implements KeycloakAuthAsyncClient {
    @Override
    public Mono<KeycloakResponse<VerifyTokenResult>> authenticationByOffline(String token, RSAPublicKey publicKey) {
       return verify(token, publicKey, configuration)
-          .map(jwt -> KeycloakResponse.of(HttpResponseStatus.OK.code(), "SUCCESS", VerifyTokenResult.of(true, jwt)))
+          .map(jwt -> KeycloakResponse.of(HttpResponseStatus.OK.code(), "SUCCESS", VerifyTokenResult.of(true, jwt), null))
           .onErrorResume(throwable -> Mono.just(
               KeycloakResponse.of(
                   HttpResponseStatus.UNAUTHORIZED.code(),
                   throwable.getMessage(),
-                  VerifyTokenResult.of(false, null)
+                  VerifyTokenResult.of(false, null),
+                  null
               )));
    }
 
@@ -129,9 +130,9 @@ public class KeycloakAuthAsyncClientImpl implements KeycloakAuthAsyncClient {
           .flatMap((body) -> getTokenKid(token)
               .flatMap((kid) -> getMatchedJwks(kid, body.getKeys()))
               .flatMap(JWTUtil::makePublicKey)
-              .flatMap((key) -> Mono.just(KeycloakResponse.of(HttpResponseStatus.OK.code(), "SUCCESS", key))))
+              .flatMap((key) -> Mono.just(KeycloakResponse.of(HttpResponseStatus.OK.code(), "SUCCESS", key, null))))
           .onErrorResume(
-              (throwable -> Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), throwable.getMessage(), null))));
+              (throwable -> Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), throwable.getMessage(), null, null))));
    }
 
    @Override
@@ -146,9 +147,10 @@ public class KeycloakAuthAsyncClientImpl implements KeycloakAuthAsyncClient {
           .send()
           .flatMap((response) -> Mono.just(
               KeycloakResponse.of(response.getStatus(), response.getMessage(), KeycloakAuthorizationResult.builder()
-                  .granted(HttpResponseStatus.OK.code() == response.getStatus())
-                  .authorizationResponse(response.getBody().orElse(null))
-                  .build())));
+                      .granted(HttpResponseStatus.OK.code() == response.getStatus())
+                      .authorizationResponse(response.getBody().orElse(null))
+                      .build(),
+                  null)));
    }
 
 

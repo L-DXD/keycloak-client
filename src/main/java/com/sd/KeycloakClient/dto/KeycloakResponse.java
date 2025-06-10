@@ -25,4 +25,8 @@ public class KeycloakResponse<T> {
    public Optional<T> getBody() {
       return Optional.ofNullable(body);
    }
+
+   public Optional<String> getResponseLocation() {
+      return Optional.ofNullable(responseLocation);
+   }
 }
