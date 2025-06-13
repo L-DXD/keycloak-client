@@ -1,6 +1,8 @@
 package com.sd.KeycloakClient.config;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import lombok.Builder;
 import lombok.Getter;
@@ -95,6 +97,27 @@ public class ClientConfiguration {
 
    public String getClientsRolesPath(String clientUuid) {
       return getBaseClientsPath() + "/" + clientUuid + ROLES_PATH;
+
+   }
+
+   public String getClientsRolesUsersPath(String clientUuid, String roleName, Boolean briefRepresentation, Integer first, Integer max) {
+      StringBuilder queryParam = new StringBuilder();
+      List<String> params = new ArrayList<>();
+
+      if (briefRepresentation != null) {
+         params.add("briefRepresentation=" + briefRepresentation);
+      }
+      if (first != null) {
+         params.add("first=" + first);
+      }
+      if (max != null) {
+         params.add("max=" + max);
+      }
+
+      if (!params.isEmpty()) {
+         queryParam.append("?").append(String.join("&", params));
+      }
+      return getClientsRolesPath(clientUuid) + "/" + roleName + USER_PATH + queryParam.toString();
    }
 
    public String getClientSearchUrl(String queryParam) {

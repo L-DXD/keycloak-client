@@ -6,6 +6,7 @@ import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.admin.RoleQueryParams;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 
 @RequiredArgsConstructor
 public class KeycloakRoleClientImpl implements KeycloakRoleClient {
@@ -30,5 +31,11 @@ public class KeycloakRoleClientImpl implements KeycloakRoleClient {
    @Override
    public KeycloakResponse<Void> removeRole(String accessToken, String userId, String clientUuid, RoleRepresentation[] role) {
       return keycloakRoleClient.removeRole(accessToken, userId, clientUuid, role).block();
+   }
+
+   @Override
+   public KeycloakResponse<UserRepresentation[]> getUsersByClientRoleName(String accessToken, String roleName, String clientUuid,
+       Boolean briefRepresentation, Integer first, Integer max) {
+      return keycloakRoleClient.getUsersByClientRoleName(accessToken, roleName, clientUuid, briefRepresentation, first, max).block();
    }
 }

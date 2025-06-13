@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import java.util.Arrays;
 import java.util.Objects;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import reactor.core.publisher.Mono;
 
 public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
@@ -38,6 +39,18 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
           .applicationJson()
           .authorizationBearer(accessToken)
           .responseType(RoleRepresentation[].class)
+          .send();
+   }
+
+   @Override
+   public Mono<KeycloakResponse<UserRepresentation[]>> getUsersByClientRoleName(String accessToken, String roleName,
+       String clientUuid, Boolean briefRepresentation, Integer first, Integer max) {
+      String clientsUsers = configuration.getClientsRolesUsersPath(clientUuid, roleName, briefRepresentation, first, max);
+
+      return http.<UserRepresentation[]>get(clientsUsers)
+          .applicationJson()
+          .authorizationBearer(accessToken)
+          .responseType(UserRepresentation[].class)
           .send();
    }
 
