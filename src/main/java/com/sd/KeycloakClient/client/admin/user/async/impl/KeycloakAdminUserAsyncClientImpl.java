@@ -35,6 +35,16 @@ public class KeycloakAdminUserAsyncClientImpl implements KeycloakAdminUserAsyncC
    }
 
    @Override
+   public Mono<KeycloakResponse<Integer>> getUsersCount(String accessToken, UserQueryParams userQueryParams) {
+      String url = configuration.getUsersCountUrl(userQueryParams.toQueryString());
+      return http.<Integer>get(url)
+          .authorizationBearer(accessToken)
+          .applicationJson()
+          .responseType(Integer.class)
+          .send();
+   }
+
+   @Override
    public Mono<KeycloakResponse<Void>> updateUserInfo(String accessToken, UserRepresentation userRepresentation) {
       String url = configuration.getUserUrl(userRepresentation.getId());
       return http.<Void>put(url)

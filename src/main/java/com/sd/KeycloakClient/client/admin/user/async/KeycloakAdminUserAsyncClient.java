@@ -17,6 +17,16 @@ public interface KeycloakAdminUserAsyncClient {
    Mono<KeycloakResponse<UserRepresentation[]>> searchUsers(String accessToken, UserQueryParams params);
 
    /**
+    * It can be called in three different ways. 1. Don’t specify any criteria and pass {@code null}. The number of all users within that
+    * realm will be returned. <p> 2. If {@code search} is specified other criteria such as {@code last} will be ignored even though you set
+    * them. The {@code search} string will be matched against the first and last name, the username and the email of a user. <p> 3. If
+    * {@code search} is unspecified but any of {@code last}, {@code first}, {@code email} or {@code username} those criteria are matched
+    * against their respective fields on a user entity. Combined with a logical and.
+    */
+   Mono<KeycloakResponse<Integer>> getUsersCount(String accessToken, UserQueryParams params);
+
+
+   /**
     * Updates the user information in Keycloak.
     *
     * @param accessToken        the access token with sufficient privileges to perform the update
