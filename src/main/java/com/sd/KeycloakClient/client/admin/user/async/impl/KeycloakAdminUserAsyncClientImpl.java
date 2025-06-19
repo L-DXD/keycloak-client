@@ -6,6 +6,7 @@ import com.sd.KeycloakClient.config.ClientConfiguration;
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
 import com.sd.KeycloakClient.http.Http;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import reactor.core.publisher.Mono;
 
@@ -71,6 +72,17 @@ public class KeycloakAdminUserAsyncClientImpl implements KeycloakAdminUserAsyncC
       return http.<Void>post(url)
           .authorizationBearer(accessToken)
           .entities(userRepresentation)
+          .applicationJson()
+          .responseType(Void.class)
+          .send();
+   }
+
+   @Override
+   public Mono<KeycloakResponse<Void>> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation) {
+      String resetPasswordUrl = configuration.getResetPasswordUrl(userId);
+      return http.<Void>put(resetPasswordUrl)
+          .authorizationBearer(accessToken)
+          .entities(credentialRepresentation)
           .applicationJson()
           .responseType(Void.class)
           .send();

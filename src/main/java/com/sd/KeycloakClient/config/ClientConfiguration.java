@@ -36,6 +36,7 @@ public class ClientConfiguration {
    private static final String ROLES_PATH = "/roles";
    private static final String ROLE_MAPPING_PATH = "/role-mappings";
    private static final String COUNT_PATH = "/count";
+   private static final String RESET_PASSWORD_PATH = "/reset-password";
 
    private String getOidcUrl() {
       String oidcUrl = "";
@@ -139,5 +140,9 @@ public class ClientConfiguration {
 
    public String getUserUrl(String userId) {
       return getBaseUserPath() + "/" + userId;
+   }
+
+   public String getResetPasswordUrl(String userId) {
+      return getUserUrl(userId) + RESET_PASSWORD_PATH;
    }
 }

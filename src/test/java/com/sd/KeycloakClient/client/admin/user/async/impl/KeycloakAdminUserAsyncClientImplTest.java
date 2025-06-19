@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -32,6 +33,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    private static final String TEST_USER_EMAIL = "test3@example.com";
    private static final String NEW_USER_EMAIL = "createnew@example.com";
    private static final String NEW_USER_NAME = "new-user";
+   private static final String RESET_PASSWORD = "test-password";
 
    @BeforeEach
    void setup() {
@@ -319,5 +321,23 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
       return UserQueryParams.builder()
           .email(email)
           .build();
+   }
+
+   @Test
+   @DisplayName("case12. success reset password")
+   void resetPassword() {
+      // given
+      CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+      credentialRepresentation.setTemporary(false);
+      credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
+      credentialRepresentation.setValue(RESET_PASSWORD);
+
+      // when & then
+      StepVerifier.create(keycloakClient.adminUserAsync().resetPassword(adminAccessToken, TEST_USER_ID, credentialRepresentation))
+          .assertNext(response -> {
+             assertThat(HttpResponseStatus.NO_CONTENT.code()).isEqualTo(response.getStatus());
+             assertThat(response.getBody()).isEmpty();
+          })
+          .verifyComplete();
    }
 }

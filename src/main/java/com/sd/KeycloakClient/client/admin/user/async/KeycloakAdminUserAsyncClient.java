@@ -2,6 +2,7 @@ package com.sd.KeycloakClient.client.admin.user.async;
 
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import reactor.core.publisher.Mono;
 
@@ -62,4 +63,9 @@ public interface KeycloakAdminUserAsyncClient {
     * @see org.keycloak.representations.idm.UserRepresentation
     */
    Mono<KeycloakResponse<Void>> createUser(String accessToken, UserRepresentation userRepresentation);
+
+   /**
+    * Set up a new password for the user.
+    */
+   Mono<KeycloakResponse<Void>> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation);
 }
