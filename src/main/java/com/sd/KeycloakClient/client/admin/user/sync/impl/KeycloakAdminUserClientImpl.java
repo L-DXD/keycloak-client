@@ -5,6 +5,7 @@ import com.sd.KeycloakClient.client.admin.user.sync.KeycloakAdminUserClient;
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
 import lombok.RequiredArgsConstructor;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 @RequiredArgsConstructor
@@ -35,6 +36,11 @@ public class KeycloakAdminUserClientImpl implements KeycloakAdminUserClient {
    @Override
    public KeycloakResponse<Void> createUser(String accessToken, UserRepresentation userRepresentation) {
       return adminUserClient.createUser(accessToken, userRepresentation).block();
+   }
+
+   @Override
+   public KeycloakResponse<Void> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation) {
+      return adminUserClient.resetPassword(accessToken, userId, credentialRepresentation).block();
    }
 
 }

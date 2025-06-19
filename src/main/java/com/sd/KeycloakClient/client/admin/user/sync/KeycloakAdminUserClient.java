@@ -2,6 +2,7 @@ package com.sd.KeycloakClient.client.admin.user.sync;
 
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 public interface KeycloakAdminUserClient {
@@ -60,4 +61,10 @@ public interface KeycloakAdminUserClient {
     * @see org.keycloak.representations.idm.UserRepresentation
     */
    KeycloakResponse<Void> createUser(String accessToken, UserRepresentation userRepresentation);
+
+   /**
+    * Set up a new password for the user.
+    */
+   KeycloakResponse<Void> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation);
+
 }
