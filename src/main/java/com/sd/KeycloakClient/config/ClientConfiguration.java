@@ -37,6 +37,11 @@ public class ClientConfiguration {
    private static final String ROLE_MAPPING_PATH = "/role-mappings";
    private static final String COUNT_PATH = "/count";
    private static final String RESET_PASSWORD_PATH = "/reset-password";
+   private static final String AUTHZ_PATH = "/authz";
+   private static final String RESOURCE_SERVER_PATH = "/resource-server";
+   private static final String SCOPE_PATH = "/scope";
+   private static final String RESOURCE_PATH = "/resource";
+   private static final String PERMISSION_PATH = "/permission";
 
    private String getOidcUrl() {
       String oidcUrl = "";
@@ -144,5 +149,18 @@ public class ClientConfiguration {
 
    public String getResetPasswordUrl(String userId) {
       return getUserUrl(userId) + RESET_PASSWORD_PATH;
+   }
+
+   // === Authorization Scope ===
+   public String getAuthScopeUrl(String clientUuid) {
+      return getBaseClientsPath() + "/" + clientUuid + AUTHZ_PATH + RESOURCE_SERVER_PATH + SCOPE_PATH;
+   }
+
+   public String getAuthScopeUrl(String clientUuid, String scopeId) {
+      return getAuthScopeUrl(clientUuid) + "/" + scopeId;
+   }
+
+   public String getAuthScopeSearchUrl(String clientUuid, String queryParam) {
+      return attachQueryParam(getAuthScopeUrl(clientUuid), queryParam);
    }
 }
