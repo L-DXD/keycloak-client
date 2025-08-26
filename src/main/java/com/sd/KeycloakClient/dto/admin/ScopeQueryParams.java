@@ -3,7 +3,9 @@ package com.sd.KeycloakClient.dto.admin;
 import static com.sd.KeycloakClient.util.UrlUtil.toUrlEncoded;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
@@ -20,11 +22,13 @@ public class ScopeQueryParams {
    /**
     * Index of the first scope to return (used for pagination). Defaults to 0 if not specified.
     */
-   private String first;
+   @Builder.Default
+   private Integer first = 0;
    /**
-    * Maximum number of scopes to return (used for pagination).
+    * Maximum number of scopes to return (used for pagination). Defaults to 100 if not specified.
     */
-   private String max;
+   @Builder.Default
+   private Integer max = 100;
    /**
     * Name of the scope to filter by.
     */
@@ -32,7 +36,7 @@ public class ScopeQueryParams {
    /**
     * Scope ID to filter by.
     */
-   private String scopeId;
+   private UUID scopeId;
 
    public String toQueryString() {
       String queryParam = toUrlEncoded(Stream.of(
@@ -42,7 +46,12 @@ public class ScopeQueryParams {
               new SimpleEntry<>("scopeId", scopeId)
           )
           .filter(entry -> entry.getValue() != null)
-          .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+          .collect(Collectors.toMap(
+              Entry::getKey,
+              Entry::getValue,
+              (a, b) -> b,
+              LinkedHashMap::new
+          )));
 
       return queryParam.isEmpty() ? "" : "?" + queryParam;
    }
