@@ -59,7 +59,6 @@ class ClientConfigurationTest {
    @Test
    @DisplayName("4. should append query params created by ScopeQueryParams (integration smoke)")
    void getAuthScopeSearchUrl_withScopeQueryParams() {
-      // 단 한 번, 통합 연기(smoke)만 확인
       String qs = ScopeQueryParams.builder().first(5).max(20).name("scopeX").build().toQueryString();
       String url = cfg.getAuthScopeSearchUrl(CLIENT_ID, qs);
       String expected = RELATIVE_PATH + "/admin/realms/" + REALM_NAME

@@ -45,9 +45,6 @@ class ScopeQueryParamsTest {
           .name(name)
           .build();
       String s = q.toQueryString();
-      // 순서가 보장되어 있다면 다음처럼 exact 비교도 가능:
-      // assertEquals("?first=0&max=100&name=" + URLEncodedExpected, s);
-      // 여기서는 존재만 확인
       assertThat(s).contains("name=");
    }
 
@@ -61,7 +58,6 @@ class ScopeQueryParamsTest {
       assertEquals("?first=0&max=100&scopeId=" + scopeId, q.toQueryString());
    }
 
-   // --- 선택: 더 풍부한 케이스 ---
 
    @ParameterizedTest(name = "5.{index}) name=\"{0}\" -> exact string")
    @CsvSource({
