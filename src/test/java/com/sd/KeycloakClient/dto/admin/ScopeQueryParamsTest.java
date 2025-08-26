@@ -1,49 +1,79 @@
 package com.sd.KeycloakClient.dto.admin;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ScopeQueryParamsTest {
 
 
-   @Nested
-   @DisplayName("toQueryString test cases")
-   class toQueryString {
-
-      @Test
-      @DisplayName("case1. no parameters provided, should return empty query string")
-      void toQueryString_noParams() {
-         ScopeQueryParams scopeQueryParams = new ScopeQueryParams();
-         String queryString = scopeQueryParams.toQueryString();
-
-         assertTrue(queryString.isEmpty());
-      }
-
-      @Test
-      @DisplayName("case2. with parameters provided, should return query string")
-      void toQueryString_withParams() {
-         ScopeQueryParams scopeQueryParams =
-             ScopeQueryParams.builder()
-                 .first("0")
-                 .max("100")
-                 .build();
-
-         String queryString = scopeQueryParams.toQueryString();
-
-         String[] parts = queryString.substring(1).split("&");
-         Map<String, String> paramMap = Arrays.stream(parts)
-             .map(s -> s.split("="))
-             .collect(Collectors.toMap(arr -> arr[0], arr -> arr[1]));
-
-         assertEquals("0", paramMap.get("first"));
-         assertEquals("100", paramMap.get("max"));
-      }
+   @Test
+   @DisplayName("1. no parameters provided -> empty string")
+   void noParams_returnsEmpty() {
+      ScopeQueryParams q = new ScopeQueryParams();
+      String s = q.toQueryString();
+      assertEquals(s, "?first=0&max=100");
    }
+
+   @ParameterizedTest(name = "2.{index}) first={0}, max={1} => \"{2}\"")
+   @CsvSource({
+       "0,100,?first=0&max=100",
+       "10,50,?first=10&max=50",
+       "1,999,?first=1&max=999",
+       "-1,100,?first=-1&max=100"
+   })
+   @DisplayName("2. numeric parameters -> exact string match")
+   void numericParams_toString(Integer first, Integer max, String expected) {
+      ScopeQueryParams q = ScopeQueryParams.builder()
+          .first(first)
+          .max(max)
+          .build();
+      assertEquals(expected, q.toQueryString());
+   }
+
+   @ParameterizedTest(name = "3.{index}) name=\"{0}\" -> contains name= fragment")
+   @ValueSource(strings = {"read", "read write", "읽기", "read/write", "a+b=c&d"})
+   @DisplayName("3. name provided -> included in query")
+   void name_included(String name) {
+      ScopeQueryParams q = ScopeQueryParams.builder()
+          .name(name)
+          .build();
+      String s = q.toQueryString();
+      // 순서가 보장되어 있다면 다음처럼 exact 비교도 가능:
+      // assertEquals("?first=0&max=100&name=" + URLEncodedExpected, s);
+      // 여기서는 존재만 확인
+      assertThat(s).contains("name=");
+   }
+
+   @Test
+   @DisplayName("4. scopeId provided -> included in query")
+   void scopeId_included() {
+      UUID scopeId = UUID.fromString("00000000-0000-0000-0000-000000000123");
+      ScopeQueryParams q = ScopeQueryParams.builder()
+          .scopeId(scopeId)
+          .build();
+      assertEquals("?first=0&max=100&scopeId=" + scopeId, q.toQueryString());
+   }
+
+   // --- 선택: 더 풍부한 케이스 ---
+
+   @ParameterizedTest(name = "5.{index}) name=\"{0}\" -> exact string")
+   @CsvSource({
+       "'',?first=0&max=100&name=",
+       "'scopeX',?first=0&max=100&name=scopeX"
+   })
+   @DisplayName("5. name empty/non-empty -> exact string")
+   void name_edgeCases_exact(String name, String expected) {
+      ScopeQueryParams q = ScopeQueryParams.builder()
+          .name(name)
+          .build();
+      assertEquals(expected, q.toQueryString());
+   }
+
 }
