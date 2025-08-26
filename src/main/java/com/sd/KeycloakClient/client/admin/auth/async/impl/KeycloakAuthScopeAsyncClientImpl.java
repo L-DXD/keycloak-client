@@ -37,8 +37,8 @@ public class KeycloakAuthScopeAsyncClientImpl implements KeycloakAuthScopeAsyncC
        String clientUuid,
        ScopeQueryParams scopeQueryParams
    ) {
-
-      return http.<ScopeRepresentation[]>get(configuration.getAuthScopeSearchUrl(clientUuid, scopeQueryParams.toQueryString()))
+      String queryString = scopeQueryParams == null ? "" : scopeQueryParams.toQueryString();
+      return http.<ScopeRepresentation[]>get(configuration.getAuthScopeSearchUrl(clientUuid, queryString))
           .authorizationBearer(accessToken)
           .applicationJson()
           .responseType(ScopeRepresentation[].class)
