@@ -3,6 +3,8 @@ package com.sd.KeycloakClient.dto.admin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.sd.KeycloakClient.util.UrlUtil;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,8 +46,9 @@ class ScopeQueryParamsTest {
       ScopeQueryParams q = ScopeQueryParams.builder()
           .name(name)
           .build();
+      String encoded = UrlUtil.toUrlEncoded(Map.of("name", name));
       String s = q.toQueryString();
-      assertThat(s).contains("name=");
+      assertThat(s).contains(encoded);
    }
 
    @Test
