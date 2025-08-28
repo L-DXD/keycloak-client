@@ -163,4 +163,17 @@ public class ClientConfiguration {
    public String getAuthScopeSearchUrl(String clientUuid, String queryParam) {
       return attachQueryParam(getAuthScopeUrl(clientUuid), queryParam);
    }
+
+   // === Authorization Resource ===
+   public String getAuthResourceUrl(String clientUuid) {
+      return getBaseClientsPath() + "/" + clientUuid + AUTHZ_PATH + RESOURCE_SERVER_PATH + RESOURCE_PATH;
+   }
+
+   public String getAuthResourceUrl(String clientUuid, String resourceUuid) {
+      return getAuthResourceUrl(clientUuid) + "/" + resourceUuid;
+   }
+
+   public String getAuthResourceSearchUrl(String clientUuid, String queryParam) {
+      return attachQueryParam(getAuthResourceUrl(clientUuid), queryParam);
+   }
 }
