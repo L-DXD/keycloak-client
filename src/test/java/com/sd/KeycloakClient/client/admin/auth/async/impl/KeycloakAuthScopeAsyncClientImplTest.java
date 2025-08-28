@@ -14,7 +14,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -47,401 +49,532 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
       TestKeycloakTokenHolder.removeAdminAccessToken();
    }
 
-   @DisplayName("case1: get scope by scopeId -> success")
-   @Test
-   void getScope() {
-      // given
-      Mono<String> ensureScopeId = keycloakClient.authScopeAsync()
-          .getScopes(adminAccessToken, CLIENT_UUID, ScopeQueryParams.builder().name(TEST_SCOPE_NAME).build()) // GET /scope/search?name=
-          .flatMap(list -> Mono.just(list.getBody().get()[0].getId()));
+   @Nested
+   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+   @DisplayName("Get Scope Tests")
+   class GetScopeTests {
 
-      // when
-      Mono<KeycloakResponse<ScopeRepresentation>> whenGet =
-          ensureScopeId.flatMap(scopeId ->
-              keycloakClient.authScopeAsync().getScope(accessToken, CLIENT_UUID, scopeId));
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Success Cases")
+      class SuccessCases {
 
-      // then
-      StepVerifier.create(whenGet)
-          .assertNext(resp -> {
-             assertThat(resp.getStatus()).isEqualTo(200);
-             assertThat(resp.getBody()).isPresent();
+         @BeforeEach
+         void setup() {
+            adminAccessToken = TestKeycloakTokenHolder.getAdminAccessToken(keycloakClient);
+            accessToken = TestKeycloakTokenHolder.getAccessToken(keycloakClient);
+         }
 
-             ScopeRepresentation body = resp.getBody().get();
-             assertThat(body.getId()).isNotBlank();
-             assertThat(body.getName()).isEqualTo(TEST_SCOPE_NAME);
-          })
-          .verifyComplete();
+         @AfterAll
+         static void afterAll() {
+            TestKeycloakTokenHolder.removeAccessToken();
+            TestKeycloakTokenHolder.removeAdminAccessToken();
+         }
+
+         @DisplayName("case1: get scope by scopeId -> success")
+         @Test
+         void getScope() {
+            // given
+            Mono<String> ensureScopeId = keycloakClient.authScopeAsync()
+                .getScopes(adminAccessToken, CLIENT_UUID,
+                    ScopeQueryParams.builder().name(TEST_SCOPE_NAME).build()) // GET /scope/search?name=
+                .flatMap(list -> Mono.just(list.getBody().get()[0].getId()));
+
+            // when
+            Mono<KeycloakResponse<ScopeRepresentation>> whenGet =
+                ensureScopeId.flatMap(scopeId ->
+                    keycloakClient.authScopeAsync().getScope(accessToken, CLIENT_UUID, scopeId));
+
+            // then
+            StepVerifier.create(whenGet)
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   assertThat(resp.getBody()).isPresent();
+
+                   ScopeRepresentation body = resp.getBody().get();
+                   assertThat(body.getId()).isNotBlank();
+                   assertThat(body.getName()).isEqualTo(TEST_SCOPE_NAME);
+                })
+                .verifyComplete();
+         }
+      }
+
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Failure Cases")
+      class FailureCases {
+
+         @DisplayName("case2: get scope with null accessToken -> 401 Unauthorized")
+         @Test
+         void getScopeAccessTokenNull() {
+            // given
+            Mono<KeycloakResponse<ScopeRepresentation>> scope = keycloakClient.authScopeAsync()
+                .getScope(null, "prm-client", "TEST_SCOPE_ID");
+            // when && then
+            StepVerifier.create(scope)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("Unauthorized");
+                })
+                .verifyComplete();
+         }
+
+         @DisplayName("case3: get scope with null clientUuid -> 404 Not Found")
+         @Test
+         void getScopeClientUuidNull() {
+            // given
+            Mono<KeycloakResponse<ScopeRepresentation>> scope = keycloakClient.authScopeAsync()
+                .getScope(accessToken, null, "TEST_SCOPE_ID");
+            // when && then
+            StepVerifier.create(scope)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("Not Found");
+                })
+                .verifyComplete();
+         }
+      }
    }
 
-   @DisplayName("case2: get scope with null accessToken -> 401 Unauthorized")
-   @Test
-   void getScopeAccessTokenNull() {
-      // given
-      Mono<KeycloakResponse<ScopeRepresentation>> scope = keycloakClient.authScopeAsync()
-          .getScope(null, "prm-client", "TEST_SCOPE_ID");
-      // when && then
-      StepVerifier.create(scope)
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
-             assertThat(response.getMessage()).contains("Unauthorized");
-          })
-          .verifyComplete();
+   @Nested
+   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+   @DisplayName("Get Scopes Tests")
+   class GetScopesTests {
+
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Success cases")
+      class SuccessCases {
+
+         static Stream<String> nameProvider() {
+            return Stream.of("GET", "POST"); // adjust to match existing test data
+         }
+
+         @ParameterizedTest(name = "case4.{index}: get scopes by name={0} -> all results match")
+         @DisplayName("case4: get scopes by name -> success")
+         @MethodSource("nameProvider")
+         void getScopes_singleName_success(String name) {
+            Mono<KeycloakResponse<ScopeRepresentation[]>> mono =
+                keycloakClient.authScopeAsync().getScopes(
+                    adminAccessToken,
+                    CLIENT_UUID,
+                    ScopeQueryParams.builder().name(name).build()
+                );
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ScopeRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   assertThat(arr).allSatisfy(s -> assertThat(s.getName()).isEqualTo(name));
+                })
+                .verifyComplete();
+         }
+
+
+         static Stream<Arguments> andSuccessProvider() {
+            return Stream.of(
+                Arguments.of("GET", 0, 100, 1),
+                Arguments.of("GET", 0, 1, 1),
+                Arguments.of("GET", 1, 100, 0) // skipping the first element -> possibly 0
+            );
+         }
+
+         @ParameterizedTest(name = "case5.{index}: name={0}, first={1}, max={2} -> AND satisfied & size ≤ max")
+         @DisplayName("case5: get scopes with multiple conditions (AND) -> success")
+         @MethodSource("andSuccessProvider")
+         void getScopes_andCombination_success(String name, Integer first, Integer max, int expectedMin) {
+            Mono<KeycloakResponse<ScopeRepresentation[]>> mono =
+                keycloakClient.authScopeAsync().getScopes(
+                    adminAccessToken,
+                    CLIENT_UUID,
+                    ScopeQueryParams.builder().name(name).first(first).max(max).build()
+                );
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ScopeRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr.length).isBetween(0, max);
+                   assertThat(arr.length).isGreaterThanOrEqualTo(expectedMin);
+                   assertThat(arr).allSatisfy(s -> assertThat(s.getName()).isEqualTo(name));
+                })
+                .verifyComplete();
+         }
+
+      }
+
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Failure cases")
+      class FailureCases {
+
+         @DisplayName("case7: get scopes with null adminAccessToken -> 401 Unauthorized")
+         @Test
+         void getScopesWithNullAdminAccessToken() {
+            // given
+            Mono<KeycloakResponse<ScopeRepresentation[]>> scopeResponse = keycloakClient.authScopeAsync().getScopes(
+                null,
+                CLIENT_UUID,
+                ScopeQueryParams.builder().name(TEST_SCOPE_NAME).build()
+            );
+
+            // when && then
+            StepVerifier.create(scopeResponse)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("Unauthorized");
+                })
+                .verifyComplete();
+         }
+      }
+
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Boundary Cases")
+      class BoundaryCases {
+
+         @ParameterizedTest(name = "case6.{index}: first={0}, max={1} -> 200 & size ≤ max")
+         @DisplayName("case6: get scopes with paging boundaries -> success")
+         @CsvSource({
+             "0,1",
+             "0,100",
+             "1,1",
+             "5,2"
+         })
+         void getScopes_boundary_paging(Integer first, Integer max) {
+            Mono<KeycloakResponse<ScopeRepresentation[]>> mono =
+                keycloakClient.authScopeAsync().getScopes(
+                    adminAccessToken,
+                    CLIENT_UUID,
+                    ScopeQueryParams.builder().first(first).max(max).build()
+                );
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ScopeRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr.length).isBetween(0, max);
+                })
+                .verifyComplete();
+         }
+      }
    }
 
-   @DisplayName("case3: get scope with null clientUuid -> 404 Not Found")
-   @Test
-   void getScopeClientUuidNull() {
-      // given
-      Mono<KeycloakResponse<ScopeRepresentation>> scope = keycloakClient.authScopeAsync()
-          .getScope(accessToken, null, "TEST_SCOPE_ID");
-      // when && then
-      StepVerifier.create(scope)
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
-             assertThat(response.getMessage()).contains("Not Found");
-          })
-          .verifyComplete();
-   }
+   @Nested
+   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+   @DisplayName("Create Scope Tests")
+   class CreateScopeTests {
 
-   @ParameterizedTest(name = "case4.{index}: get scopes by name={0} -> all results match")
-   @DisplayName("case4: get scopes by name -> success")
-   @MethodSource("nameProvider")
-   void getScopes_singleName_success(String name) {
-      Mono<KeycloakResponse<ScopeRepresentation[]>> mono =
-          keycloakClient.authScopeAsync().getScopes(
-              adminAccessToken,
-              CLIENT_UUID,
-              ScopeQueryParams.builder().name(name).build()
-          );
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Success Cases")
+      class SuccessCases {
 
-      StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-          .assertNext(resp -> {
-             assertThat(resp.getStatus()).isEqualTo(200);
-             ScopeRepresentation[] arr = resp.getBody().orElseThrow();
-             assertThat(arr).isNotEmpty();
-             assertThat(arr).allSatisfy(s -> assertThat(s.getName()).isEqualTo(name));
-          })
-          .verifyComplete();
-   }
+         @DisplayName("case8: create scope -> success")
+         @Test
+         void createScope() {
+            // given
+            String testName = "TestScope";
+            String testIconUri = "http://example.com/icon.png";
+            String testDisplayName = "This is a test scope";
+            ScopeRepresentation newScope = new ScopeRepresentation();
+            newScope.setName(testName);
+            newScope.setIconUri(testIconUri);
+            newScope.setDisplayName(testDisplayName);
+            Mono<KeycloakResponse<Void>> scopeResponse = keycloakClient.authScopeAsync().createScope(
+                adminAccessToken,
+                CLIENT_UUID,
+                newScope
+            );
 
-   static Stream<String> nameProvider() {
-      return Stream.of("GET", "POST"); // adjust to match existing test data
-   }
+            // when
+            StepVerifier.create(scopeResponse)
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(201);
+                   assertThat(resp.getBody()).isEmpty();
+                })
+                .verifyComplete();
 
-   // 2. Multiple conditions (AND)
-   @ParameterizedTest(name = "case5.{index}: name={0}, first={1}, max={2} -> AND satisfied & size ≤ max")
-   @DisplayName("case5: get scopes with multiple conditions (AND) -> success")
-   @MethodSource("andSuccessProvider")
-   void getScopes_andCombination_success(String name, Integer first, Integer max, int expectedMin) {
-      Mono<KeycloakResponse<ScopeRepresentation[]>> mono =
-          keycloakClient.authScopeAsync().getScopes(
-              adminAccessToken,
-              CLIENT_UUID,
-              ScopeQueryParams.builder().name(name).first(first).max(max).build()
-          );
+            // then
+            Mono<KeycloakResponse<ScopeRepresentation[]>> getScopesResponse = keycloakClient.authScopeAsync().getScopes(
+                adminAccessToken,
+                CLIENT_UUID,
+                ScopeQueryParams.builder().name(testName).build()
+            );
+            StepVerifier.create(getScopesResponse)
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   assertThat(resp.getBody()).isPresent();
+                   ScopeRepresentation[] scopes = resp.getBody().get();
+                   assertThat(scopes).isNotEmpty();
+                   assertThat(scopes[0].getName()).isEqualTo(testName);
+                   assertThat(scopes[0].getIconUri()).isEqualTo(testIconUri);
+                   assertThat(scopes[0].getDisplayName()).isEqualTo(testDisplayName);
+                })
+                .verifyComplete();
+         }
 
-      StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-          .assertNext(resp -> {
-             assertThat(resp.getStatus()).isEqualTo(200);
-             ScopeRepresentation[] arr = resp.getBody().orElseThrow();
-             assertThat(arr.length).isBetween(0, max);
-             assertThat(arr.length).isGreaterThanOrEqualTo(expectedMin);
-             assertThat(arr).allSatisfy(s -> assertThat(s.getName()).isEqualTo(name));
-          })
-          .verifyComplete();
-   }
 
-   static Stream<Arguments> andSuccessProvider() {
-      return Stream.of(
-          Arguments.of("GET", 0, 100, 1),
-          Arguments.of("GET", 0, 1, 1),
-          Arguments.of("GET", 1, 100, 0) // skipping the first element -> possibly 0
-      );
-   }
+         @DisplayName("case9: create scope with empty ScopeRepresentation -> success")
+         @Test
+         void createScopeWithEmptyScopeRepresentation() {
+            // given
+            ScopeRepresentation newScope = new ScopeRepresentation();
+            keycloakClient.authScopeAsync().createScope(
+                adminAccessToken,
+                CLIENT_UUID,
+                newScope
+            ).block();
 
-   // 3. Paging boundaries
+            // when & then
+            Mono<KeycloakResponse<ScopeRepresentation[]>> getScopesResponse = keycloakClient.authScopeAsync().getScopes(
+                adminAccessToken,
+                CLIENT_UUID,
+                ScopeQueryParams.builder().name(newScope.getName()).build()
+            );
+            StepVerifier.create(getScopesResponse)
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   assertThat(resp.getBody()).isPresent();
+                   ScopeRepresentation[] scopes = resp.getBody().get();
+                   assertThat(scopes).isNotEmpty();
+                   assertThat(scopes[0].getId()).isNotBlank();
+                })
+                .verifyComplete();
+         }
+      }
 
-   @ParameterizedTest(name = "case6.{index}: first={0}, max={1} -> 200 & size ≤ max")
-   @DisplayName("case6: get scopes with paging boundaries -> success")
-   @CsvSource({
-       "0,1",
-       "0,100",
-       "1,1",
-       "5,2"
-   })
-   void getScopes_boundary_paging(Integer first, Integer max) {
-      Mono<KeycloakResponse<ScopeRepresentation[]>> mono =
-          keycloakClient.authScopeAsync().getScopes(
-              adminAccessToken,
-              CLIENT_UUID,
-              ScopeQueryParams.builder().first(first).max(max).build()
-          );
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Failure Cases")
+      class FailureCases {
 
-      StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-          .assertNext(resp -> {
-             assertThat(resp.getStatus()).isEqualTo(200);
-             ScopeRepresentation[] arr = resp.getBody().orElseThrow();
-             assertThat(arr.length).isBetween(0, max);
-          })
-          .verifyComplete();
-   }
+         @DisplayName("case10 : create scope with null accessToken -> 401 Unauthorized")
+         @Test
+         void createScopeWithNullAccessToken() {
+            // given
+            ScopeRepresentation newScope = new ScopeRepresentation();
+            newScope.setName("TestScope");
+            Mono<KeycloakResponse<Void>> scopeResponse = keycloakClient.authScopeAsync().createScope(
+                null,
+                CLIENT_UUID,
+                newScope
+            );
 
-   @DisplayName("case7: get scopes with null adminAccessToken -> 401 Unauthorized")
-   @Test
-   void getScopesWithNullAdminAccessToken() {
-      // given
-      Mono<KeycloakResponse<ScopeRepresentation[]>> scopeResponse = keycloakClient.authScopeAsync().getScopes(
-          null,
-          CLIENT_UUID,
-          ScopeQueryParams.builder().name(TEST_SCOPE_NAME).build()
-      );
+            // when && then
+            StepVerifier.create(scopeResponse)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("Unauthorized");
+                })
+                .verifyComplete();
+         }
 
-      // when && then
-      StepVerifier.create(scopeResponse)
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
-             assertThat(response.getMessage()).contains("Unauthorized");
-          })
-          .verifyComplete();
-   }
 
-   @DisplayName("case8: create scope -> success")
-   @Test
-   void createScope() {
-      // given
-      String testName = "TestScope";
-      String testIconUri = "http://example.com/icon.png";
-      String testDisplayName = "This is a test scope";
-      ScopeRepresentation newScope = new ScopeRepresentation();
-      newScope.setName(testName);
-      newScope.setIconUri(testIconUri);
-      newScope.setDisplayName(testDisplayName);
-      Mono<KeycloakResponse<Void>> scopeResponse = keycloakClient.authScopeAsync().createScope(
-          adminAccessToken,
-          CLIENT_UUID,
-          newScope
-      );
+         @DisplayName("case11: create scope with null clientUuid -> 404 Not Found")
+         @Test
+         void createScopeWithNullClientUuid() {
+            // given
+            ScopeRepresentation newScope = new ScopeRepresentation();
+            newScope.setName("TestScope");
+            Mono<KeycloakResponse<Void>> scopeResponse = keycloakClient.authScopeAsync().createScope(
+                adminAccessToken,
+                null,
+                newScope
+            );
 
-      // when
-      StepVerifier.create(scopeResponse)
-          .assertNext(resp -> {
-             assertThat(resp.getStatus()).isEqualTo(201);
-             assertThat(resp.getBody()).isEmpty();
-          })
-          .verifyComplete();
+            // when && then
+            StepVerifier.create(scopeResponse)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("Not Found");
+                })
+                .verifyComplete();
+         }
 
-      // then
-      Mono<KeycloakResponse<ScopeRepresentation[]>> getScopesResponse = keycloakClient.authScopeAsync().getScopes(
-          adminAccessToken,
-          CLIENT_UUID,
-          ScopeQueryParams.builder().name(testName).build()
-      );
-      StepVerifier.create(getScopesResponse)
-          .assertNext(resp -> {
-             assertThat(resp.getStatus()).isEqualTo(200);
-             assertThat(resp.getBody()).isPresent();
-             ScopeRepresentation[] scopes = resp.getBody().get();
-             assertThat(scopes).isNotEmpty();
-             assertThat(scopes[0].getName()).isEqualTo(testName);
-             assertThat(scopes[0].getIconUri()).isEqualTo(testIconUri);
-             assertThat(scopes[0].getDisplayName()).isEqualTo(testDisplayName);
-          })
-          .verifyComplete();
-   }
+         @DisplayName("case12: create scope with null name -> 409 Conflict")
+         @Test
+         void createScopeWithNullName() {
+            // given
+            ScopeRepresentation newScope = new ScopeRepresentation();
+            newScope.setName(null);
+            Mono<KeycloakResponse<Void>> scopeResponse = keycloakClient.authScopeAsync().createScope(
+                adminAccessToken,
+                CLIENT_UUID,
+                newScope
+            );
 
-   @DisplayName("case9: create scope with null clientUuid -> 404 Not Found")
-   @Test
-   void createScopeWithNullClientUuid() {
-      // given
-      ScopeRepresentation newScope = new ScopeRepresentation();
-      newScope.setName("TestScope");
-      Mono<KeycloakResponse<Void>> scopeResponse = keycloakClient.authScopeAsync().createScope(
-          adminAccessToken,
-          null,
-          newScope
-      );
-
-      // when && then
-      StepVerifier.create(scopeResponse)
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
-             assertThat(response.getMessage()).contains("Not Found");
-          })
-          .verifyComplete();
-   }
-
-   @DisplayName("case10: create scope with empty ScopeRepresentation -> success")
-   @Test
-   void createScopeWithEmptyScopeRepresentation() {
-      // given
-      ScopeRepresentation newScope = new ScopeRepresentation();
-      keycloakClient.authScopeAsync().createScope(
-          adminAccessToken,
-          CLIENT_UUID,
-          newScope
-      ).block();
-
-      // when & then
-      Mono<KeycloakResponse<ScopeRepresentation[]>> getScopesResponse = keycloakClient.authScopeAsync().getScopes(
-          adminAccessToken,
-          CLIENT_UUID,
-          ScopeQueryParams.builder().name(newScope.getName()).build()
-      );
-      StepVerifier.create(getScopesResponse)
-          .assertNext(resp -> {
-             assertThat(resp.getStatus()).isEqualTo(200);
-             assertThat(resp.getBody()).isPresent();
-             ScopeRepresentation[] scopes = resp.getBody().get();
-             assertThat(scopes).isNotEmpty();
-             assertThat(scopes[0].getId()).isNotBlank();
-          })
-          .verifyComplete();
-   }
-
-   @DisplayName("case11: create scope with null name -> 409 Conflict")
-   @Test
-   void createScopeWithNullName() {
-      // given
-      ScopeRepresentation newScope = new ScopeRepresentation();
-      newScope.setName(null);
-      Mono<KeycloakResponse<Void>> scopeResponse = keycloakClient.authScopeAsync().createScope(
-          adminAccessToken,
-          CLIENT_UUID,
-          newScope
-      );
-
-      // when && then
-      StepVerifier.create(scopeResponse)
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.CONFLICT.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
-             assertThat(response.getMessage()).contains("unknown_error");
-          })
-          .verifyComplete();
+            // when && then
+            StepVerifier.create(scopeResponse)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.CONFLICT.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("unknown_error");
+                })
+                .verifyComplete();
+         }
+      }
    }
 
 
-   @Test
-   @DisplayName("case12: update scope -> success")
-   void updateScope() {
+   @Nested
+   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+   @DisplayName("Update Scope Tests")
+   class UpdateScopeTests {
 
-      // given : before create a new scope
-      String newScopeName = "TestScopeToUpdate";
-      String updateScopeName = "UpdatedScopeName";
-      ScopeRepresentation newScope = new ScopeRepresentation();
-      newScope.setName(newScopeName);
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Success Cases")
+      class SuccessCases {
 
-      keycloakClient.authScopeAsync().createScope(
-          adminAccessToken,
-          CLIENT_UUID,
-          newScope
-      ).block();
+         @Test
+         @DisplayName("case12: update scope -> success")
+         void updateScope() {
 
-      // scope get ScopeRepresentation
-      ScopeRepresentation getScope = keycloakClient.authScopeAsync()
-          .getScopes(adminAccessToken, CLIENT_UUID,
-              ScopeQueryParams.builder().name(newScope.getName()).build())
-          .map(KeycloakResponse::getBody)
-          .switchIfEmpty(Mono.error(new IllegalStateException("empty body")))
-          .block(Duration.ofSeconds(5))
-          .get()[0];
-      getScope.setName(updateScopeName);
+            // given :   create a new scope
+            String newScopeName = "TestScopeToUpdate";
+            String updateScopeName = "UpdatedScopeName";
+            ScopeRepresentation newScope = new ScopeRepresentation();
+            newScope.setName(newScopeName);
 
-      // when: update the created scope, then verify the update
-      Mono<KeycloakResponse<Void>> updateScope = keycloakClient.authScopeAsync().updateScope(
-          adminAccessToken,
-          CLIENT_UUID,
-          getScope);
-      StepVerifier.create(updateScope)
-          .assertNext(response -> {
-             assertThat(response.getStatus()).isEqualTo(204);
-             assertThat(response.getBody()).isEmpty();
-          })
-          .verifyComplete();
+            keycloakClient.authScopeAsync().createScope(
+                adminAccessToken,
+                CLIENT_UUID,
+                newScope
+            ).block();
+
+            // scope get ScopeRepresentation
+            ScopeRepresentation getScope = keycloakClient.authScopeAsync()
+                .getScopes(adminAccessToken, CLIENT_UUID,
+                    ScopeQueryParams.builder().name(newScope.getName()).build())
+                .map(KeycloakResponse::getBody)
+                .switchIfEmpty(Mono.error(new IllegalStateException("empty body")))
+                .block(Duration.ofSeconds(5))
+                .get()[0];
+            getScope.setName(updateScopeName);
+
+            // when: update the created scope, then verify the update
+            Mono<KeycloakResponse<Void>> updateScope = keycloakClient.authScopeAsync().updateScope(
+                adminAccessToken,
+                CLIENT_UUID,
+                getScope);
+            StepVerifier.create(updateScope)
+                .assertNext(response -> {
+                   assertThat(response.getStatus()).isEqualTo(204);
+                   assertThat(response.getBody()).isEmpty();
+                })
+                .verifyComplete();
+         }
+      }
+
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Failure Cases")
+      class FailureCases {
+
+         @Test
+         @DisplayName("case13: update scope with null accessToken -> 401 Unauthorized")
+         void updateScopeWithNullAccessToken() {
+            // given
+            ScopeRepresentation scopeToUpdate = new ScopeRepresentation();
+            scopeToUpdate.setName("ScopeToUpdate");
+
+            // when
+            Mono<KeycloakResponse<Void>> updateScope = keycloakClient.authScopeAsync().updateScope(
+                null, // accessToken is null
+                CLIENT_UUID,
+                scopeToUpdate);
+
+            // then
+            StepVerifier.create(updateScope)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("Unauthorized");
+                })
+                .verifyComplete();
+         }
+      }
    }
 
-   @Test
-   @DisplayName("case13: update scope with null accessToken -> 401 Unauthorized")
-   void updateScopeWithNullAccessToken() {
-      // given
-      ScopeRepresentation scopeToUpdate = new ScopeRepresentation();
-      scopeToUpdate.setName("ScopeToUpdate");
+   @Nested
+   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+   @DisplayName("Delete Scope Tests")
+   class deleteScopeTests {
 
-      // when
-      Mono<KeycloakResponse<Void>> updateScope = keycloakClient.authScopeAsync().updateScope(
-          null, // accessToken is null
-          CLIENT_UUID,
-          scopeToUpdate);
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Success Cases")
+      class SuccessCases {
 
-      // then
-      StepVerifier.create(updateScope)
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
-             assertThat(response.getMessage()).contains("Unauthorized");
-          })
-          .verifyComplete();
-   }
+         @Test
+         @DisplayName("case14: delete scope -> success")
+         void deleteScopeSuccess() {
+            // given : create a new scope
+            String scopeName = "ScopeToDelete";
+            ScopeRepresentation newScope = new ScopeRepresentation();
+            newScope.setName(scopeName);
 
-   // deleteScope 200 OK
-   @Test
-   @DisplayName("case14: delete scope -> success")
-   void deleteScopeSuccess() {
-      // given : create a new scope
-      String scopeName = "ScopeToDelete";
-      ScopeRepresentation newScope = new ScopeRepresentation();
-      newScope.setName(scopeName);
+            keycloakClient.authScopeAsync().createScope(
+                adminAccessToken,
+                CLIENT_UUID,
+                newScope
+            ).block();
+            String scopeId = keycloakClient.authScopeAsync().getScopes(
+                accessToken,
+                CLIENT_UUID,
+                ScopeQueryParams.builder().name(scopeName).build()
+            ).block().getBody().get()[0].getId();// Ensure the scope is created
 
-      keycloakClient.authScopeAsync().createScope(
-          adminAccessToken,
-          CLIENT_UUID,
-          newScope
-      ).block();
-      String scopeId = keycloakClient.authScopeAsync().getScopes(
-          accessToken,
-          CLIENT_UUID,
-          ScopeQueryParams.builder().name(scopeName).build()
-      ).block().getBody().get()[0].getId();// Ensure the scope is created
+            // then: delete the created scope
+            Mono<KeycloakResponse<Void>> deleteScopeResponse = keycloakClient.authScopeAsync().deleteScope(
+                adminAccessToken,
+                CLIENT_UUID,
+                scopeId
+            );
 
-      // then: delete the created scope
-      Mono<KeycloakResponse<Void>> deleteScopeResponse = keycloakClient.authScopeAsync().deleteScope(
-          adminAccessToken,
-          CLIENT_UUID,
-          scopeId
-      );
+            StepVerifier.create(deleteScopeResponse)
+                .assertNext(response -> {
+                   assertThat(response.getStatus()).isEqualTo(204);
+                   assertThat(response.getBody()).isEmpty();
+                })
+                .verifyComplete();
+         }
+      }
 
-      StepVerifier.create(deleteScopeResponse)
-          .assertNext(response -> {
-             assertThat(response.getStatus()).isEqualTo(204);
-             assertThat(response.getBody()).isEmpty();
-          })
-          .verifyComplete();
-   }
+      @Nested
+      @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+      @DisplayName("Failure Cases")
+      class FailureCases {
 
-   @Test
-   @DisplayName("case15: delete scope with null accessToken -> 401 Unauthorized")
-   void deleteScopeWithNullAccessToken() {
-      // given
-      String scopeId = "test-scope-id";
+         @Test
+         @DisplayName("case15: delete scope with null accessToken -> 401 Unauthorized")
+         void deleteScopeWithNullAccessToken() {
+            // given
+            String scopeId = "test-scope-id";
 
-      // when
-      Mono<KeycloakResponse<Void>> deleteScopeResponse = keycloakClient.authScopeAsync().deleteScope(
-          null, // accessToken is null
-          CLIENT_UUID,
-          scopeId
-      );
+            // when
+            Mono<KeycloakResponse<Void>> deleteScopeResponse = keycloakClient.authScopeAsync().deleteScope(
+                null, // accessToken is null
+                CLIENT_UUID,
+                scopeId
+            );
 
-      // then
-      StepVerifier.create(deleteScopeResponse)
-          .assertNext(response -> {
-             assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
-             assertThat(response.getBody()).isEmpty();
-             assertThat(response.getMessage()).contains("Unauthorized");
-          })
-          .verifyComplete();
+            // then
+            StepVerifier.create(deleteScopeResponse)
+                .assertNext(response -> {
+                   assertThat(HttpResponseStatus.UNAUTHORIZED.code()).isEqualTo(response.getStatus());
+                   assertThat(response.getBody()).isEmpty();
+                   assertThat(response.getMessage()).contains("Unauthorized");
+                })
+                .verifyComplete();
+         }
+      }
    }
 }
