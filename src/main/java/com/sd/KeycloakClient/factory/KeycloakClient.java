@@ -1,5 +1,9 @@
 package com.sd.KeycloakClient.factory;
 
+import com.sd.KeycloakClient.client.admin.auth.async.KeycloakAuthScopeAsyncClient;
+import com.sd.KeycloakClient.client.admin.auth.async.impl.KeycloakAuthScopeAsyncClientImpl;
+import com.sd.KeycloakClient.client.admin.auth.sync.KeycloakAuthScopeClient;
+import com.sd.KeycloakClient.client.admin.auth.sync.impl.KeycloakAuthScopeClientImpl;
 import com.sd.KeycloakClient.client.admin.client.async.KeycloakClientsAsyncClient;
 import com.sd.KeycloakClient.client.admin.client.async.impl.KeycloakClientsAsyncClientImpl;
 import com.sd.KeycloakClient.client.admin.client.sync.KeycloakClientsClient;
@@ -40,6 +44,8 @@ public class KeycloakClient {
    private final KeycloakClientsClientImpl clientsClient;
    private final KeycloakRoleAsyncClientImpl roleAsyncClient;
    private final KeycloakRoleClientImpl roleClient;
+   private final KeycloakAuthScopeAsyncClientImpl authScopeAsyncClient;
+   private final KeycloakAuthScopeClientImpl authScopeClient;
 
    public KeycloakClient(final ClientConfiguration config) {
       this.authAsyncClient = new KeycloakAuthAsyncClientImpl(config);
@@ -52,6 +58,8 @@ public class KeycloakClient {
       this.clientsClient = new KeycloakClientsClientImpl(this.clientsAsyncClient);
       this.roleAsyncClient = new KeycloakRoleAsyncClientImpl(config);
       this.roleClient = new KeycloakRoleClientImpl(this.roleAsyncClient);
+      this.authScopeAsyncClient = new KeycloakAuthScopeAsyncClientImpl(config);
+      this.authScopeClient = new KeycloakAuthScopeClientImpl(this.authScopeAsyncClient);
    }
 
    public KeycloakAuthClient auth() {
@@ -92,5 +100,13 @@ public class KeycloakClient {
 
    public KeycloakRoleClient role() {
       return this.roleClient;
+   }
+
+   public KeycloakAuthScopeAsyncClient authScopeAsync() {
+      return this.authScopeAsyncClient;
+   }
+
+   public KeycloakAuthScopeClient authScope() {
+      return this.authScopeClient;
    }
 }

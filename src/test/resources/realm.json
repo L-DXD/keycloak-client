@@ -770,15 +770,27 @@
             "iconUri": ""
           },
           {
-            "name": "order",
-            "iconUri": ""
-          },
-          {
             "name": "PUT",
             "iconUri": ""
           },
           {
             "name": "POST",
+            "iconUri": ""
+          },
+          {
+            "name": "OPTIONS",
+            "iconUri": ""
+          },
+          {
+            "name": "HEAD",
+            "iconUri": ""
+          },
+          {
+            "name": "CONNECT",
+            "iconUri": ""
+          },
+          {
+            "name": "TRACE",
             "iconUri": ""
           }
         ],
