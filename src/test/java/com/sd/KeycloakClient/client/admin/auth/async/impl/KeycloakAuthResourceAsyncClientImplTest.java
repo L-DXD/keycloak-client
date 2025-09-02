@@ -11,6 +11,7 @@ import com.sd.KeycloakClient.factory.KeycloakClient;
 import com.sd.KeycloakClient.util.UrlUtil;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -139,13 +140,11 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
       }
    }
 
-
    @Nested
    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
    @DisplayName("Get Resources Tests (covers all ResourceQueryParams)")
    class GetResourcesTests {
 
-      // ===== 공통 헬퍼 =====
       private UUID createResourceAndGetId(String name, String type, String uri) {
          ResourceRepresentation rr = new ResourceRepresentation();
          rr.setName(name);
@@ -174,39 +173,214 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
       @DisplayName("Success Cases")
       class SuccessCases {
 
-         static Stream<String> nameProvider() {
-            return Stream.of("res-한글", "res with space", "res/with/slash", "a+b=c&d");
+         static Stream<String> prefixProvider() {
+            return Stream.of("prefix-a", "prefix-ab", "prefix-abc", "prefix-abcd");
          }
 
-         @ParameterizedTest(name = "case1.{index}: name=\"{0}\" & exactName=true -> 200 & all match")
-         @MethodSource("nameProvider")
-         @DisplayName("case1: name + exactName=true")
-         void byName_exact_true(String name) {
-            //given
-            createResourceAndGetId(name, null, null);
+         @ParameterizedTest(name = "case1.{index}: query=\"{0}\" exactName=true → only exact")
+         @MethodSource("prefixProvider")
+         @DisplayName("case1: Prefix with exactName=true returns only exact matches")
+         void case1_prefix_exact_true(String query) {
+            List<String> pool = prefixProvider().toList();
+            pool.forEach(n -> createResourceAndGetId(n, null, null));
 
-            // when
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().name(name).exactName(true).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(true).build());
 
-            // then
             StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
                 .assertNext(resp -> {
                    assertThat(resp.getStatus()).isEqualTo(200);
                    ResourceRepresentation[] arr = resp.getBody().orElseThrow();
                    assertThat(arr).isNotEmpty();
-                   assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(name));
+                   assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
+                })
+                .verifyComplete();
+         }
+
+         @ParameterizedTest(name = "case2.{index}: query=\"{0}\" exactName=false → includes prefix variants")
+         @MethodSource("prefixProvider")
+         @DisplayName("case2: Prefix with exactName=false includes prefix variants (partial matches)")
+         void case2_prefix_exact_false(String query) {
+            List<String> pool = prefixProvider().toList();
+            pool.forEach(n -> createResourceAndGetId(n, null, null));
+
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(false).build());
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   assertThat(Stream.of(arr).map(ResourceRepresentation::getName)).contains(query);
+                   assertThat(Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query))).isTrue();
+                })
+                .verifyComplete();
+         }
+
+         static Stream<String> suffixProvider() {
+            return Stream.of("suffix-report", "suffix-report1", "suffix-report2");
+         }
+
+         @ParameterizedTest(name = "case3.{index}: query=\"{0}\" exactName=true → only exact")
+         @MethodSource("suffixProvider")
+         @DisplayName("case3: Suffix with exactName=true returns only exact matches")
+         void case3_suffix_exact_true(String query) {
+            List<String> pool = suffixProvider().toList();
+            pool.forEach(n -> createResourceAndGetId(n, null, null));
+
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(true).build());
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
+                })
+                .verifyComplete();
+         }
+
+         @ParameterizedTest(name = "case4.{index}: query=\"{0}\" exactName=false → includes suffix variants")
+         @MethodSource("suffixProvider")
+         @DisplayName("case4: Suffix with exactName=false includes suffix variants (partial matches)")
+         void case4_suffix_exact_false(String query) {
+            List<String> pool = suffixProvider().toList();
+            pool.forEach(n -> createResourceAndGetId(n, null, null));
+
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(false).build());
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   assertThat(Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query))).isTrue();
+                })
+                .verifyComplete();
+         }
+
+         static Stream<String> whitespaceSpecialProvider() {
+            return Stream.of(
+                "ws-report",
+                "ws-report v1",
+                "ws-report-v1",
+                "ws-report_v1",
+                "ws-a+b=c&d",
+                "ws-res/with/slash",
+                "ws-res with space",
+                "ws-res-한글"
+            );
+         }
+
+         @ParameterizedTest(name = "case5.{index}: query=\"{0}\" exactName=true → only exact")
+         @MethodSource("whitespaceSpecialProvider")
+         @DisplayName("case5: Whitespace/Special with exactName=true returns only exact matches")
+         void case5_whitespaceSpecial_exact_true(String query) {
+            List<String> distractors = whitespaceSpecialProvider().toList();
+            Stream.concat(Stream.of(query), distractors.stream()).distinct().forEach(n -> createResourceAndGetId(n, null, null));
+
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(true).build());
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
+                })
+                .verifyComplete();
+         }
+
+         @ParameterizedTest(name = "case6.{index}: query=\"{0}\" exactName=false → includes partials")
+         @MethodSource("whitespaceSpecialProvider")
+         @DisplayName("case6: Whitespace/Special with exactName=false includes partial matches")
+         void case6_whitespaceSpecial_exact_false(String query) {
+            List<String> pool = whitespaceSpecialProvider().toList();
+            pool.stream().distinct().forEach(n -> createResourceAndGetId(n, null, null));
+
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(false).build());
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   assertThat(
+                       Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query) || n.equals(query))).isTrue();
+                })
+                .verifyComplete();
+         }
+
+         static Stream<String> caseVariantProvider() {
+            return Stream.of("case-Report", "case-REPORT", "case-report");
+         }
+
+         @ParameterizedTest(name = "case7.{index}: query=\"{0}\" exactName=true → case sensitivity check")
+         @MethodSource("caseVariantProvider")
+         @DisplayName("case7: Case variants with exactName=true checks case sensitivity")
+         void case7_case_exact_true(String query) {
+            caseVariantProvider().forEach(n -> createResourceAndGetId(n, null, null));
+
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(true).build());
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   List<String> names = Stream.of(arr).map(ResourceRepresentation::getName).toList();
+                   boolean allExactlySame = names.stream().allMatch(n -> n.equals(query));
+                   boolean containsOtherCases = names.stream().anyMatch(n -> !n.equals(query) && n.equalsIgnoreCase(query));
+                   assertThat(allExactlySame || containsOtherCases)
+                       .as("exactName=true should be either case-sensitive (only exact) or case-insensitive (include case variants). names="
+                           + names)
+                       .isTrue();
+                   if (allExactlySame) {
+                      System.out.println("[case check] exactName=true is CASE-SENSITIVE for query=" + query + ", names=" + names);
+                   } else {
+                      System.out.println("[case check] exactName=true is CASE-INSENSITIVE for query=" + query + ", names=" + names);
+                   }
+                })
+                .verifyComplete();
+         }
+
+         @ParameterizedTest(name = "case8.{index}: query=\"{0}\" exactName=false → includes case variants")
+         @MethodSource("caseVariantProvider")
+         @DisplayName("case8: Case variants with exactName=false include case-insensitive matches")
+         void case8_case_exact_false(String query) {
+            caseVariantProvider().forEach(n -> createResourceAndGetId(n, null, null));
+
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(query).exactName(false).build());
+
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
+                .assertNext(resp -> {
+                   assertThat(resp.getStatus()).isEqualTo(200);
+                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+                   assertThat(arr).isNotEmpty();
+                   List<String> names = Stream.of(arr).map(ResourceRepresentation::getName).toList();
+                   assertThat(names.stream().anyMatch(n -> n.equalsIgnoreCase(query))).isTrue();
                 })
                 .verifyComplete();
          }
 
          @Test
-         @DisplayName("case2: id 단건 필터 -> 200 & exactly one (or matching) ")
-         void byId() {
+         @DisplayName("case9: Filter by id → 200 & exactly one")
+         void case9_byId() {
             String name = "res-" + UUID.randomUUID();
             UUID id = createResourceAndGetId(name, "urn:type:id", "/api/id/" + UUID.randomUUID());
 
@@ -226,8 +400,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case3: type 필터 -> 200 & all type match")
-         void byType() {
+         @DisplayName("case10: Filter by type → 200 & all match")
+         void case10_byType() {
             String type = "urn:type:" + UUID.randomUUID();
             String name = "res-" + UUID.randomUUID();
             createResourceAndGetId(name, type, "/api/type/" + UUID.randomUUID());
@@ -250,8 +424,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case4: uri 필터 -> 200 & at least one with uri present")
-         void byUri() {
+         @DisplayName("case11: Filter by uri → 200 & at least one contains uri")
+         void case11_byUri() {
             String uri = "/api/uri/" + UUID.randomUUID();
             String name = "res-" + UUID.randomUUID();
             createResourceAndGetId(name, "urn:type:uri", uri);
@@ -277,8 +451,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case5: matchingUri 필터 -> 200")
-         void byMatchingUri() {
+         @DisplayName("case12: Filter by matchingUri → 200")
+         void case12_byMatchingUri() {
             String base = "/api/match/" + UUID.randomUUID();
             String uri = base + "/child";
             String name = "res-" + UUID.randomUUID();
@@ -294,21 +468,20 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
                 .assertNext(resp -> {
                    assertThat(resp.getStatus()).isEqualTo(200);
-                   // 서버 동작에 따라 empty 가능 → 최소한 200/에러없음 확인
                    assertThat(resp.getBody()).isPresent();
                 })
                 .verifyComplete();
          }
 
-         @ParameterizedTest(name = "case6.{index}: first={0}, max={1} -> 200 & size ≤ max")
+         @ParameterizedTest(name = "case13.{index}: first={0}, max={1} → 200 & size ≤ max")
          @CsvSource({
              "0,1",
              "0,50",
              "1,1",
              "5,2"
          })
-         @DisplayName("case6: 페이징(first/max) -> 200 & size ≤ max")
-         void paging(Integer first, Integer max) {
+         @DisplayName("case13: Paging (first/max) → 200 & size ≤ max")
+         void case13_paging(Integer first, Integer max) {
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(
                     adminAccessToken,
@@ -326,8 +499,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case7: deep=true/exactName=false + name partial + type + uri 조합(AND) -> 200")
-         void andCombination() {
+         @DisplayName("case14: AND combination (partial name + type + uri + deep)")
+         void case14_andCombination() {
             String name = "res-" + UUID.randomUUID();
             String type = "urn:type:combo";
             String uri = "/api/combo/" + UUID.randomUUID();
@@ -338,7 +511,7 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
                     adminAccessToken,
                     CLIENT_UUID,
                     ResourceQueryParams.builder()
-                        .name(name.substring(0, 6)) // partial
+                        .name(name.substring(0, 6))
                         .exactName(false)
                         .deep(true)
                         .type(type)
@@ -357,15 +530,14 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
       }
 
-
       @Nested
       @TestInstance(TestInstance.Lifecycle.PER_CLASS)
       @DisplayName("Failure Cases")
       class FailureCases {
 
          @Test
-         @DisplayName("case8: accessToken=null -> 401 Unauthorized")
-         void nullAccessToken() {
+         @DisplayName("case15: accessToken=null → 401 Unauthorized")
+         void case15_nullAccessToken() {
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(
                     null,
@@ -383,8 +555,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case9: clientUuid=null -> 404 Not Found")
-         void nullClientUuid() {
+         @DisplayName("case16: clientUuid=null → 404 Not Found")
+         void case16_nullClientUuid() {
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(
                     accessToken,
@@ -402,21 +574,20 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
       }
 
-
       @Nested
       @TestInstance(TestInstance.Lifecycle.PER_CLASS)
       @DisplayName("Boundary Cases")
       class BoundaryCases {
 
-         @ParameterizedTest(name = "case10.{index}: first={0}, max={1} → 200 & size ≤ max")
+         @ParameterizedTest(name = "case17.{index}: first={0}, max={1} → 200 & size ≤ max")
          @CsvSource({
-             "-1,100",    // 음수 first 허용 여부: 서버가 200 반환 시 size ≤ max만 보장
-             "0,0",       // max=0
+             "-1,100",
+             "0,0",
              "0,1",
-             "1000,5"     // 큰 first
+             "1000,5"
          })
-         @DisplayName("case10: 페이징 극단값")
-         void extremePaging(Integer first, Integer max) {
+         @DisplayName("case17: Extreme paging values")
+         void case17_extremePaging(Integer first, Integer max) {
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(
                     adminAccessToken,
@@ -428,7 +599,6 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
                 .assertNext(resp -> {
                    assertThat(resp.getStatus()).isEqualTo(200);
                    ResourceRepresentation[] arr = resp.getBody().orElse(new ResourceRepresentation[0]);
-                   // max가 0이면 length==0 기대, 그 외 ≤ max
                    if (max != null && max == 0) {
                       assertThat(arr.length).isZero();
                    } else {
@@ -439,8 +609,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case11: name='' (empty) -> 200 & query 포함 확인")
-         void emptyName() {
+         @DisplayName("case18: name is empty string → 200 and query present")
+         void case18_emptyName() {
             ResourceQueryParams qp = ResourceQueryParams.builder().name("").build();
             String encoded = UrlUtil.toUrlEncoded(Map.of("name", ""));
             assertThat(qp.toQueryString()).contains(encoded);
@@ -454,8 +624,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case12: exactName=true 이지만 name 미지정 -> 200")
-         void exactNameWithoutName() {
+         @DisplayName("case19: exactName=true without name → 200")
+         void case19_exactNameWithoutName() {
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(
                     accessToken,
@@ -469,8 +639,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case13: deep=true 단독 -> 200")
-         void deepOnly() {
+         @DisplayName("case20: deep=true only → 200")
+         void case20_deepOnly() {
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(
                     accessToken,
@@ -484,8 +654,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          }
 
          @Test
-         @DisplayName("case14: id=존재하지 않는 UUID -> 200 & empty or not found logically")
-         void nonExistsId() {
+         @DisplayName("case21: id is non-existing UUID → 200 with empty or none")
+         void case21_nonExistsId() {
             UUID randomNotExists = UUID.randomUUID();
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(
@@ -497,14 +667,12 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
                 .assertNext(resp -> {
                    assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElse(new ResourceRepresentation[0]);
-                   // 서버에 따라 empty or not — 최소 200 보장
-                   // 관찰 위주: 강한 조건은 피함
+                   resp.getBody().orElse(new ResourceRepresentation[0]);
                 })
                 .verifyComplete();
          }
 
-         @ParameterizedTest(name = "case15.{index}: special({0}) value → 200 (URL-encoded 포함)")
+         @ParameterizedTest(name = "case22.{index}: special param {0}=\"{1}\" → 200 (URL-encoded)")
          @CsvSource({
              "owner,user 123",
              "scope,read/write",
@@ -512,9 +680,8 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
              "uri,/api/special/a+b=c&d",
              "matchingUri,/api/match/*"
          })
-         @DisplayName("case15: 특수문자 인코딩 파라미터")
-         void specialCharsEncoded(String key, String value) {
-            // 쿼리스트링 생성 확인
+         @DisplayName("case22: Special characters are URL-encoded in query")
+         void case22_specialCharsEncoded(String key, String value) {
             ResourceQueryParams.ResourceQueryParamsBuilder b = ResourceQueryParams.builder();
             switch (key) {
                case "owner":
@@ -538,7 +705,6 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             ResourceQueryParams qp = b.build();
             assertThat(qp.toQueryString()).contains(UrlUtil.toUrlEncoded(Map.of(key, value)));
 
-            // 서버 호출
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
                 keycloakClient.authResourceAsync().getResources(accessToken, CLIENT_UUID, qp);
 
