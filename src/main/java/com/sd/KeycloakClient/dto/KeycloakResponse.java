@@ -22,6 +22,15 @@ public class KeycloakResponse<T> {
           .build();
    }
 
+   public static <T> KeycloakResponse<T> fail(final int status, final String message) {
+      return KeycloakResponse.<T>builder()
+          .status(status)
+          .message(message)
+          .body(null)
+          .responseLocation(null)
+          .build();
+   }
+
    public Optional<T> getBody() {
       return Optional.ofNullable(body);
    }

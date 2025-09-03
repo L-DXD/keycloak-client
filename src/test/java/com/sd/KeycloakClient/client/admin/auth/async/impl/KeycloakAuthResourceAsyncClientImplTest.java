@@ -71,33 +71,26 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             ResourceRepresentation newRes = new ResourceRepresentation();
             newRes.setName(name);
 
-            keycloakClient.authResourceAsync()
-                .createResource(adminAccessToken, CLIENT_UUID, newRes)
-                .block(Duration.ofSeconds(5));
+            keycloakClient.authResourceAsync().createResource(adminAccessToken, CLIENT_UUID, newRes).block(Duration.ofSeconds(5));
 
             // resourceId 확보 (검색)
             Mono<UUID> ensureResourceId = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(name).exactName(true).build())
-                .map(KeycloakResponse::getBody)
-                .switchIfEmpty(Mono.error(new IllegalStateException("empty body")))
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(name).exactName(true).build())
+                .map(KeycloakResponse::getBody).switchIfEmpty(Mono.error(new IllegalStateException("empty body")))
                 .map(arr -> UUID.fromString(arr.get()[0].getId()));
 
             // when
-            Mono<KeycloakResponse<ResourceRepresentation>> whenGet =
-                ensureResourceId.flatMap(resourceId ->
-                    keycloakClient.authResourceAsync().getResource(accessToken, CLIENT_UUID, resourceId));
+            Mono<KeycloakResponse<ResourceRepresentation>> whenGet = ensureResourceId.flatMap(
+                resourceId -> keycloakClient.authResourceAsync().getResource(accessToken, CLIENT_UUID, resourceId));
 
             // then
-            StepVerifier.create(whenGet.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   assertThat(resp.getBody()).isPresent();
-                   ResourceRepresentation body = resp.getBody().get();
-                   assertThat(body.getId()).isNotBlank();
-                   assertThat(body.getName()).isEqualTo(name);
-                })
-                .verifyComplete();
+            StepVerifier.create(whenGet.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               assertThat(resp.getBody()).isPresent();
+               ResourceRepresentation body = resp.getBody().get();
+               assertThat(body.getId()).isNotBlank();
+               assertThat(body.getName()).isEqualTo(name);
+            }).verifyComplete();
          }
       }
 
@@ -109,34 +102,55 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          @Test
          @DisplayName("case2: get resource with null accessToken -> 401 Unauthorized")
          void getResource_accessTokenNull() {
-            Mono<KeycloakResponse<ResourceRepresentation>> mono =
-                keycloakClient.authResourceAsync()
-                    .getResource(null, CLIENT_UUID, UUID.randomUUID());
+            Mono<KeycloakResponse<ResourceRepresentation>> mono = keycloakClient.authResourceAsync()
+                .getResource(null, CLIENT_UUID, UUID.randomUUID());
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Unauthorized");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
          }
 
          @Test
-         @DisplayName("case3: get resource with null clientUuid -> 404 Not Found")
-         void getResource_clientUuidNull() {
-            Mono<KeycloakResponse<ResourceRepresentation>> mono =
-                keycloakClient.authResourceAsync()
-                    .getResource(accessToken, null, UUID.randomUUID());
+         @DisplayName("case2-1: get resource with blank accessToken -> 401 Unauthorized")
+         void getResource_accessTokenBlank() {
+            Mono<KeycloakResponse<ResourceRepresentation>> mono = keycloakClient.authResourceAsync()
+                .getResource("   ", CLIENT_UUID, UUID.randomUUID());
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.NOT_FOUND.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Not Found");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
          }
+
+         @Test
+         @DisplayName("case3: get resource with null clientUuid -> 400 Bad Request")
+         void getResource_clientUuidNull() {
+            Mono<KeycloakResponse<ResourceRepresentation>> mono = keycloakClient.authResourceAsync()
+                .getResource(accessToken, null, UUID.randomUUID());
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("clientUuid is required");
+            }).verifyComplete();
+         }
+
+         @Test
+         @DisplayName("case4: get resource with null resourceId -> 400 Bad Request")
+         void getResource_resourceIdNull() {
+            Mono<KeycloakResponse<ResourceRepresentation>> mono = keycloakClient.authResourceAsync()
+                .getResource(accessToken, CLIENT_UUID, null);
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("resourceId is required");
+            }).verifyComplete();
+         }
+
       }
    }
 
@@ -155,17 +169,11 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             rr.setUris(Set.of(uri));
          }
 
-         keycloakClient.authResourceAsync()
-             .createResource(adminAccessToken, CLIENT_UUID, rr)
-             .block(Duration.ofSeconds(5));
+         keycloakClient.authResourceAsync().createResource(adminAccessToken, CLIENT_UUID, rr).block(Duration.ofSeconds(5));
 
          return keycloakClient.authResourceAsync()
-             .getResources(adminAccessToken, CLIENT_UUID,
-                 ResourceQueryParams.builder().name(name).exactName(true).build())
-             .block(Duration.ofSeconds(5))
-             .getBody()
-             .map(arr -> UUID.fromString(arr[0].getId()))
-             .orElseThrow();
+             .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(name).exactName(true).build())
+             .block(Duration.ofSeconds(5)).getBody().map(arr -> UUID.fromString(arr[0].getId())).orElseThrow();
       }
 
       @Nested
@@ -185,17 +193,14 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             pool.forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(true).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(true).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
+            }).verifyComplete();
          }
 
          @ParameterizedTest(name = "case2.{index}: query=\"{0}\" exactName=false → includes prefix variants")
@@ -206,18 +211,15 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             pool.forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(false).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(false).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(Stream.of(arr).map(ResourceRepresentation::getName)).contains(query);
-                   assertThat(Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query))).isTrue();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(Stream.of(arr).map(ResourceRepresentation::getName)).contains(query);
+               assertThat(Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query))).isTrue();
+            }).verifyComplete();
          }
 
          static Stream<String> suffixProvider() {
@@ -232,17 +234,14 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             pool.forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(true).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(true).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
+            }).verifyComplete();
          }
 
          @ParameterizedTest(name = "case4.{index}: query=\"{0}\" exactName=false → includes suffix variants")
@@ -253,30 +252,19 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             pool.forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(false).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(false).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query))).isTrue();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query))).isTrue();
+            }).verifyComplete();
          }
 
          static Stream<String> whitespaceSpecialProvider() {
-            return Stream.of(
-                "ws-report",
-                "ws-report v1",
-                "ws-report-v1",
-                "ws-report_v1",
-                "ws-a+b=c&d",
-                "ws-res/with/slash",
-                "ws-res with space",
-                "ws-res-한글"
-            );
+            return Stream.of("ws-report", "ws-report v1", "ws-report-v1", "ws-report_v1", "ws-a+b=c&d", "ws-res/with/slash",
+                "ws-res with space", "ws-res-한글");
          }
 
          @ParameterizedTest(name = "case5.{index}: query=\"{0}\" exactName=true → only exact")
@@ -287,17 +275,14 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             Stream.concat(Stream.of(query), distractors.stream()).distinct().forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(true).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(true).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(arr).allSatisfy(r -> assertThat(r.getName()).isEqualTo(query));
+            }).verifyComplete();
          }
 
          @ParameterizedTest(name = "case6.{index}: query=\"{0}\" exactName=false → includes partials")
@@ -308,18 +293,14 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             pool.stream().distinct().forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(false).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(false).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(
-                       Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query) || n.equals(query))).isTrue();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(Stream.of(arr).map(ResourceRepresentation::getName).anyMatch(n -> n.contains(query) || n.equals(query))).isTrue();
+            }).verifyComplete();
          }
 
          static Stream<String> caseVariantProvider() {
@@ -333,28 +314,24 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             caseVariantProvider().forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(true).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(true).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   List<String> names = Stream.of(arr).map(ResourceRepresentation::getName).toList();
-                   boolean allExactlySame = names.stream().allMatch(n -> n.equals(query));
-                   boolean containsOtherCases = names.stream().anyMatch(n -> !n.equals(query) && n.equalsIgnoreCase(query));
-                   assertThat(allExactlySame || containsOtherCases)
-                       .as("exactName=true should be either case-sensitive (only exact) or case-insensitive (include case variants). names="
-                           + names)
-                       .isTrue();
-                   if (allExactlySame) {
-                      System.out.println("[case check] exactName=true is CASE-SENSITIVE for query=" + query + ", names=" + names);
-                   } else {
-                      System.out.println("[case check] exactName=true is CASE-INSENSITIVE for query=" + query + ", names=" + names);
-                   }
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               List<String> names = Stream.of(arr).map(ResourceRepresentation::getName).toList();
+               boolean allExactlySame = names.stream().allMatch(n -> n.equals(query));
+               boolean containsOtherCases = names.stream().anyMatch(n -> !n.equals(query) && n.equalsIgnoreCase(query));
+               assertThat(allExactlySame || containsOtherCases).as(
+                   "exactName=true should be either case-sensitive (only exact) or case-insensitive (include case variants). names="
+                       + names).isTrue();
+               if (allExactlySame) {
+                  System.out.println("[case check] exactName=true is CASE-SENSITIVE for query=" + query + ", names=" + names);
+               } else {
+                  System.out.println("[case check] exactName=true is CASE-INSENSITIVE for query=" + query + ", names=" + names);
+               }
+            }).verifyComplete();
          }
 
          @ParameterizedTest(name = "case8.{index}: query=\"{0}\" exactName=false → includes case variants")
@@ -364,18 +341,15 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             caseVariantProvider().forEach(n -> createResourceAndGetId(n, null, null));
 
             Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(query).exactName(false).build());
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(query).exactName(false).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   List<String> names = Stream.of(arr).map(ResourceRepresentation::getName).toList();
-                   assertThat(names.stream().anyMatch(n -> n.equalsIgnoreCase(query))).isTrue();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               List<String> names = Stream.of(arr).map(ResourceRepresentation::getName).toList();
+               assertThat(names.stream().anyMatch(n -> n.equalsIgnoreCase(query))).isTrue();
+            }).verifyComplete();
          }
 
          @Test
@@ -384,19 +358,15 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             String name = "res-" + UUID.randomUUID();
             UUID id = createResourceAndGetId(name, "urn:type:id", "/api/id/" + UUID.randomUUID());
 
-            Mono<KeycloakResponse<ResourceRepresentation>> mono =
-                keycloakClient.authResourceAsync().getResource(
-                    adminAccessToken, CLIENT_UUID, id
-                );
+            Mono<KeycloakResponse<ResourceRepresentation>> mono = keycloakClient.authResourceAsync()
+                .getResource(adminAccessToken, CLIENT_UUID, id);
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation body = resp.getBody().orElseThrow();
-                   assertThat(body.getId()).isEqualTo(id.toString());
-                   assertThat(body.getName()).isEqualTo(name);
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation body = resp.getBody().orElseThrow();
+               assertThat(body.getId()).isEqualTo(id.toString());
+               assertThat(body.getName()).isEqualTo(name);
+            }).verifyComplete();
          }
 
          @Test
@@ -406,21 +376,15 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             String name = "res-" + UUID.randomUUID();
             createResourceAndGetId(name, type, "/api/type/" + UUID.randomUUID());
 
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().type(type).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().type(type).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(arr).allSatisfy(r -> assertThat(type).isEqualTo(r.getType()));
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(arr).allSatisfy(r -> assertThat(type).isEqualTo(r.getType()));
+            }).verifyComplete();
          }
 
          @Test
@@ -430,24 +394,18 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             String name = "res-" + UUID.randomUUID();
             createResourceAndGetId(name, "urn:type:uri", uri);
 
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().uri(uri).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().uri(uri).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(arr).anySatisfy(r -> {
-                      assertThat(r.getUris()).isNotNull();
-                      assertThat(r.getUris()).contains(uri);
-                   });
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(arr).anySatisfy(r -> {
+                  assertThat(r.getUris()).isNotNull();
+                  assertThat(r.getUris()).contains(uri);
+               });
+            }).verifyComplete();
          }
 
          @Test
@@ -458,44 +416,27 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             String name = "res-" + UUID.randomUUID();
             createResourceAndGetId(name, "urn:type:match", uri);
 
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().matchingUri(base + "/*").build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().matchingUri(base + "/*").build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   assertThat(resp.getBody()).isPresent();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               assertThat(resp.getBody()).isPresent();
+            }).verifyComplete();
          }
 
          @ParameterizedTest(name = "case13.{index}: first={0}, max={1} → 200 & size ≤ max")
-         @CsvSource({
-             "0,1",
-             "0,50",
-             "1,1",
-             "5,2"
-         })
+         @CsvSource({"0,1", "0,50", "1,1", "5,2"})
          @DisplayName("case13: Paging (first/max) → 200 & size ≤ max")
          void case13_paging(Integer first, Integer max) {
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().first(first).max(max).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().first(first).max(max).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr.length).isBetween(0, max);
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr.length).isBetween(0, max);
+            }).verifyComplete();
          }
 
          @Test
@@ -506,27 +447,15 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             String uri = "/api/combo/" + UUID.randomUUID();
             createResourceAndGetId(name, type, uri);
 
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder()
-                        .name(name.substring(0, 6))
-                        .exactName(false)
-                        .deep(true)
-                        .type(type)
-                        .uri(uri)
-                        .first(0)
-                        .max(10)
-                        .build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID,
+                    ResourceQueryParams.builder().name(name.substring(0, 6)).exactName(false).deep(true).type(type).uri(uri).first(0)
+                        .max(10).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   assertThat(resp.getBody()).isPresent();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               assertThat(resp.getBody()).isPresent();
+            }).verifyComplete();
          }
       }
 
@@ -538,39 +467,40 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          @Test
          @DisplayName("case15: accessToken=null → 401 Unauthorized")
          void case15_nullAccessToken() {
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    null,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().first(0).max(5).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(null, CLIENT_UUID, ResourceQueryParams.builder().first(0).max(5).build());
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Unauthorized");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
          }
 
          @Test
-         @DisplayName("case16: clientUuid=null → 404 Not Found")
-         void case16_nullClientUuid() {
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    accessToken,
-                    null,
-                    ResourceQueryParams.builder().first(0).max(5).build()
-                );
+         @DisplayName("case15-1: accessToken=blank → 401 Unauthorized")
+         void case15_blankAccessToken() {
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources("   ", CLIENT_UUID, ResourceQueryParams.builder().first(0).max(5).build());
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.NOT_FOUND.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Not Found");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
+         }
+
+         @Test
+         @DisplayName("case16: clientUuid=null → 400 Bad Request")
+         void case16_nullClientUuid() {
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(accessToken, null, ResourceQueryParams.builder().first(0).max(5).build());
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("clientUuid is required");
+            }).verifyComplete();
          }
       }
 
@@ -580,32 +510,21 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
       class BoundaryCases {
 
          @ParameterizedTest(name = "case17.{index}: first={0}, max={1} → 200 & size ≤ max")
-         @CsvSource({
-             "-1,100",
-             "0,0",
-             "0,1",
-             "1000,5"
-         })
+         @CsvSource({"-1,100", "0,0", "0,1", "1000,5"})
          @DisplayName("case17: Extreme paging values")
          void case17_extremePaging(Integer first, Integer max) {
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().first(first).max(max).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().first(first).max(max).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElse(new ResourceRepresentation[0]);
-                   if (max != null && max == 0) {
-                      assertThat(arr.length).isZero();
-                   } else {
-                      assertThat(arr.length).isBetween(0, Math.max(0, max));
-                   }
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElse(new ResourceRepresentation[0]);
+               if (max != null && max == 0) {
+                  assertThat(arr.length).isZero();
+               } else {
+                  assertThat(arr.length).isBetween(0, Math.max(0, max));
+               }
+            }).verifyComplete();
          }
 
          @Test
@@ -615,41 +534,30 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             String encoded = UrlUtil.toUrlEncoded(Map.of("name", ""));
             assertThat(qp.toQueryString()).contains(encoded);
 
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(accessToken, CLIENT_UUID, qp);
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(accessToken, CLIENT_UUID, qp);
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
                 .verifyComplete();
          }
 
          @Test
          @DisplayName("case19: exactName=true without name → 200")
          void case19_exactNameWithoutName() {
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    accessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().exactName(true).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(accessToken, CLIENT_UUID, ResourceQueryParams.builder().exactName(true).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
                 .verifyComplete();
          }
 
          @Test
          @DisplayName("case20: deep=true only → 200")
          void case20_deepOnly() {
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    accessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().deep(true).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(accessToken, CLIENT_UUID, ResourceQueryParams.builder().deep(true).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
                 .verifyComplete();
          }
 
@@ -657,29 +565,18 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          @DisplayName("case21: id is non-existing UUID → 200 with empty or none")
          void case21_nonExistsId() {
             UUID randomNotExists = UUID.randomUUID();
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(
-                    accessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().id(randomNotExists).build()
-                );
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(accessToken, CLIENT_UUID, ResourceQueryParams.builder().id(randomNotExists).build());
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   resp.getBody().orElse(new ResourceRepresentation[0]);
-                })
-                .verifyComplete();
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               resp.getBody().orElse(new ResourceRepresentation[0]);
+            }).verifyComplete();
          }
 
          @ParameterizedTest(name = "case22.{index}: special param {0}=\"{1}\" → 200 (URL-encoded)")
-         @CsvSource({
-             "owner,user 123",
-             "scope,read/write",
-             "type,urn:type/with space",
-             "uri,/api/special/a+b=c&d",
-             "matchingUri,/api/match/*"
-         })
+         @CsvSource({"owner,user 123", "scope,read/write", "type,urn:type/with space", "uri,/api/special/a+b=c&d",
+             "matchingUri,/api/match/*"})
          @DisplayName("case22: Special characters are URL-encoded in query")
          void case22_specialCharsEncoded(String key, String value) {
             ResourceQueryParams.ResourceQueryParamsBuilder b = ResourceQueryParams.builder();
@@ -705,11 +602,10 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             ResourceQueryParams qp = b.build();
             assertThat(qp.toQueryString()).contains(UrlUtil.toUrlEncoded(Map.of(key, value)));
 
-            Mono<KeycloakResponse<ResourceRepresentation[]>> mono =
-                keycloakClient.authResourceAsync().getResources(accessToken, CLIENT_UUID, qp);
+            Mono<KeycloakResponse<ResourceRepresentation[]>> mono = keycloakClient.authResourceAsync()
+                .getResources(accessToken, CLIENT_UUID, qp);
 
-            StepVerifier.create(mono.timeout(Duration.ofSeconds(5)))
-                .assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
+            StepVerifier.create(mono.timeout(Duration.ofSeconds(5))).assertNext(resp -> assertThat(resp.getStatus()).isEqualTo(200))
                 .verifyComplete();
          }
       }
@@ -735,32 +631,24 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             newRes.setName(name);
 
             // when
-            Mono<KeycloakResponse<Void>> createMono =
-                keycloakClient.authResourceAsync().createResource(adminAccessToken, CLIENT_UUID, newRes);
+            Mono<KeycloakResponse<Void>> createMono = keycloakClient.authResourceAsync()
+                .createResource(adminAccessToken, CLIENT_UUID, newRes);
 
             // then
-            StepVerifier.create(createMono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(201);
-                   assertThat(resp.getBody()).isEmpty();
-                })
-                .verifyComplete();
+            StepVerifier.create(createMono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(201);
+               assertThat(resp.getBody()).isEmpty();
+            }).verifyComplete();
 
             // verify by listing
-            Mono<KeycloakResponse<ResourceRepresentation[]>> listMono =
-                keycloakClient.authResourceAsync().getResources(
-                    adminAccessToken,
-                    CLIENT_UUID,
-                    ResourceQueryParams.builder().name(name).exactName(true).build()
-                );
-            StepVerifier.create(listMono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(200);
-                   ResourceRepresentation[] arr = resp.getBody().orElseThrow();
-                   assertThat(arr).isNotEmpty();
-                   assertThat(arr[0].getName()).isEqualTo(name);
-                })
-                .verifyComplete();
+            Mono<KeycloakResponse<ResourceRepresentation[]>> listMono = keycloakClient.authResourceAsync()
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(name).exactName(true).build());
+            StepVerifier.create(listMono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(200);
+               ResourceRepresentation[] arr = resp.getBody().orElseThrow();
+               assertThat(arr).isNotEmpty();
+               assertThat(arr[0].getName()).isEqualTo(name);
+            }).verifyComplete();
          }
       }
 
@@ -775,35 +663,45 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             ResourceRepresentation res = new ResourceRepresentation();
             res.setName("res-" + UUID.randomUUID());
 
-            Mono<KeycloakResponse<Void>> mono =
-                keycloakClient.authResourceAsync().createResource(null, CLIENT_UUID, res);
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().createResource(null, CLIENT_UUID, res);
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Unauthorized");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
          }
 
          @Test
-         @DisplayName("case9: create resource with null clientUuid -> 404 Not Found")
-         void createResource_clientUuidNull() {
+         @DisplayName("case8-1: create resource with blank accessToken -> 401 Unauthorized")
+         void createResource_accessTokenBlank() {
             ResourceRepresentation res = new ResourceRepresentation();
             res.setName("res-" + UUID.randomUUID());
 
-            Mono<KeycloakResponse<Void>> mono =
-                keycloakClient.authResourceAsync().createResource(adminAccessToken, null, res);
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().createResource("   ", CLIENT_UUID, res);
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.NOT_FOUND.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Not Found");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
          }
+
+         @Test
+         @DisplayName("case8-2: create resource with null clientUuid -> 400 Bad Request")
+         void createResource_clientUuidBlank() {
+            ResourceRepresentation res = new ResourceRepresentation();
+            res.setName("res-" + UUID.randomUUID());
+
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().createResource(adminAccessToken, null, res);
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("clientUuid is required");
+            }).verifyComplete();
+         }
+
       }
    }
 
@@ -826,13 +724,10 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             ResourceRepresentation res = new ResourceRepresentation();
             res.setName(originalName);
 
-            keycloakClient.authResourceAsync()
-                .createResource(adminAccessToken, CLIENT_UUID, res)
-                .block(Duration.ofSeconds(5));
+            keycloakClient.authResourceAsync().createResource(adminAccessToken, CLIENT_UUID, res).block(Duration.ofSeconds(5));
 
             ResourceRepresentation toUpdate = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(originalName).exactName(true).build())
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(originalName).exactName(true).build())
                 .map(resp -> {
                    ResourceRepresentation[] arr = resp.getBody()
                        .orElseThrow(() -> new IllegalStateException("empty body from getResources"));
@@ -840,21 +735,17 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
                       throw new IllegalStateException("empty array from getResources");
                    }
                    return arr[0];
-                })
-                .block(Duration.ofSeconds(5));
+                }).block(Duration.ofSeconds(5));
             toUpdate.setName("updated-" + originalName);
 
             // when
-            Mono<KeycloakResponse<Void>> mono =
-                keycloakClient.authResourceAsync().updateResource(adminAccessToken, CLIENT_UUID, toUpdate);
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().updateResource(adminAccessToken, CLIENT_UUID, toUpdate);
 
             // then
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(204);
-                   assertThat(resp.getBody()).isEmpty();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(204);
+               assertThat(resp.getBody()).isEmpty();
+            }).verifyComplete();
          }
       }
 
@@ -870,16 +761,45 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             res.setId(UUID.randomUUID().toString());
             res.setName("res-" + UUID.randomUUID());
 
-            Mono<KeycloakResponse<Void>> mono =
-                keycloakClient.authResourceAsync().updateResource(null, CLIENT_UUID, res);
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().updateResource(null, CLIENT_UUID, res);
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Unauthorized");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
+         }
+
+         @Test
+         @DisplayName("case11-1: update resource with blank accessToken -> 401 Unauthorized")
+         void updateResource_accessTokenBlank() {
+            ResourceRepresentation res = new ResourceRepresentation();
+            res.setId(UUID.randomUUID().toString());
+            res.setName("res-" + UUID.randomUUID());
+
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().updateResource("   ", CLIENT_UUID, res);
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
+         }
+
+         @Test
+         @DisplayName("case11-2: update resource with null clientUuid -> 400 Bad Request")
+         void updateResource_clientUuidNull() {
+            ResourceRepresentation res = new ResourceRepresentation();
+            res.setId(UUID.randomUUID().toString());
+            res.setName("res-" + UUID.randomUUID());
+
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().updateResource(adminAccessToken, null, res);
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("clientUuid is required");
+            }).verifyComplete();
          }
       }
    }
@@ -902,29 +822,21 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
             ResourceRepresentation res = new ResourceRepresentation();
             res.setName(name);
 
-            keycloakClient.authResourceAsync()
-                .createResource(adminAccessToken, CLIENT_UUID, res)
-                .block(Duration.ofSeconds(5));
+            keycloakClient.authResourceAsync().createResource(adminAccessToken, CLIENT_UUID, res).block(Duration.ofSeconds(5));
 
             UUID resourceId = keycloakClient.authResourceAsync()
-                .getResources(adminAccessToken, CLIENT_UUID,
-                    ResourceQueryParams.builder().name(name).exactName(true).build())
-                .block(Duration.ofSeconds(5))
-                .getBody()
-                .map(arr -> UUID.fromString(arr[0].getId()))
-                .orElseThrow();
+                .getResources(adminAccessToken, CLIENT_UUID, ResourceQueryParams.builder().name(name).exactName(true).build())
+                .block(Duration.ofSeconds(5)).getBody().map(arr -> UUID.fromString(arr[0].getId())).orElseThrow();
 
             // when
-            Mono<KeycloakResponse<Void>> mono =
-                keycloakClient.authResourceAsync().deleteResource(adminAccessToken, CLIENT_UUID, resourceId);
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync()
+                .deleteResource(adminAccessToken, CLIENT_UUID, resourceId);
 
             // then
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(204);
-                   assertThat(resp.getBody()).isEmpty();
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(204);
+               assertThat(resp.getBody()).isEmpty();
+            }).verifyComplete();
          }
       }
 
@@ -936,17 +848,51 @@ class KeycloakAuthResourceAsyncClientImplTest extends KeycloakShareTestContainer
          @Test
          @DisplayName("case13: delete resource with null accessToken -> 401 Unauthorized")
          void deleteResource_accessTokenNull() {
-            Mono<KeycloakResponse<Void>> mono =
-                keycloakClient.authResourceAsync()
-                    .deleteResource(null, CLIENT_UUID, UUID.randomUUID());
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().deleteResource(null, CLIENT_UUID, UUID.randomUUID());
 
-            StepVerifier.create(mono)
-                .assertNext(resp -> {
-                   assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
-                   assertThat(resp.getBody()).isEmpty();
-                   assertThat(resp.getMessage()).contains("Unauthorized");
-                })
-                .verifyComplete();
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
+         }
+
+         @Test
+         @DisplayName("case13-1: delete resource with blank accessToken -> 401 Unauthorized")
+         void deleteResource_accessTokenBlank() {
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().deleteResource("   ", CLIENT_UUID, UUID.randomUUID());
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.UNAUTHORIZED.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("Unauthorized");
+            }).verifyComplete();
+         }
+
+
+         @Test
+         @DisplayName("case13-2: delete resource with null clientUuid -> 400 Bad Request")
+         void deleteResource_clientUuidNull() {
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync()
+                .deleteResource(adminAccessToken, null, UUID.randomUUID());
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("clientUuid is required");
+            }).verifyComplete();
+         }
+
+         @Test
+         @DisplayName("case13-3: delete resource with null resourceId -> 400 Bad Request")
+         void deleteResource_resourceIdNull() {
+            Mono<KeycloakResponse<Void>> mono = keycloakClient.authResourceAsync().deleteResource(adminAccessToken, CLIENT_UUID, null);
+
+            StepVerifier.create(mono).assertNext(resp -> {
+               assertThat(resp.getStatus()).isEqualTo(HttpResponseStatus.BAD_REQUEST.code());
+               assertThat(resp.getBody()).isEmpty();
+               assertThat(resp.getMessage()).contains("resourceId is required");
+            }).verifyComplete();
          }
       }
    }
