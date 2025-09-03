@@ -1,8 +1,12 @@
 package com.sd.KeycloakClient.factory;
 
+import com.sd.KeycloakClient.client.admin.auth.async.KeycloakAuthResourceAsyncClient;
 import com.sd.KeycloakClient.client.admin.auth.async.KeycloakAuthScopeAsyncClient;
+import com.sd.KeycloakClient.client.admin.auth.async.impl.KeycloakAuthResourceAsyncClientImpl;
 import com.sd.KeycloakClient.client.admin.auth.async.impl.KeycloakAuthScopeAsyncClientImpl;
+import com.sd.KeycloakClient.client.admin.auth.sync.KeycloakAuthResourceClient;
 import com.sd.KeycloakClient.client.admin.auth.sync.KeycloakAuthScopeClient;
+import com.sd.KeycloakClient.client.admin.auth.sync.impl.KeycloakAuthResourceClientImpl;
 import com.sd.KeycloakClient.client.admin.auth.sync.impl.KeycloakAuthScopeClientImpl;
 import com.sd.KeycloakClient.client.admin.client.async.KeycloakClientsAsyncClient;
 import com.sd.KeycloakClient.client.admin.client.async.impl.KeycloakClientsAsyncClientImpl;
@@ -46,6 +50,8 @@ public class KeycloakClient {
    private final KeycloakRoleClientImpl roleClient;
    private final KeycloakAuthScopeAsyncClientImpl authScopeAsyncClient;
    private final KeycloakAuthScopeClientImpl authScopeClient;
+   private final KeycloakAuthResourceAsyncClientImpl authResourceAsyncClient;
+   private final KeycloakAuthResourceClientImpl authResourceClient;
 
    public KeycloakClient(final ClientConfiguration config) {
       this.authAsyncClient = new KeycloakAuthAsyncClientImpl(config);
@@ -60,6 +66,8 @@ public class KeycloakClient {
       this.roleClient = new KeycloakRoleClientImpl(this.roleAsyncClient);
       this.authScopeAsyncClient = new KeycloakAuthScopeAsyncClientImpl(config);
       this.authScopeClient = new KeycloakAuthScopeClientImpl(this.authScopeAsyncClient);
+      this.authResourceAsyncClient = new KeycloakAuthResourceAsyncClientImpl(config);
+      this.authResourceClient = new KeycloakAuthResourceClientImpl(this.authResourceAsyncClient);
    }
 
    public KeycloakAuthClient auth() {
@@ -108,5 +116,13 @@ public class KeycloakClient {
 
    public KeycloakAuthScopeClient authScope() {
       return this.authScopeClient;
+   }
+
+   public KeycloakAuthResourceAsyncClient authResourceAsync() {
+      return this.authResourceAsyncClient;
+   }
+
+   public KeycloakAuthResourceClient authResource() {
+      return this.authResourceClient;
    }
 }
