@@ -8,6 +8,7 @@ import com.sd.KeycloakClient.http.Http;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.UUID;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import reactor.core.publisher.Mono;
@@ -23,7 +24,7 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
    }
 
    @Override
-   public Mono<KeycloakResponse<RoleRepresentation[]>> getRoles(String accessToken, String clientUuid, RoleQueryParams queryParams) {
+   public Mono<KeycloakResponse<RoleRepresentation[]>> getRoles(String accessToken, UUID clientUuid, RoleQueryParams queryParams) {
       String rolesUrl = configuration.getRolesUrl(clientUuid, queryParams.toQueryString());
       return http.<RoleRepresentation[]>get(rolesUrl)
           .applicationJson()
@@ -33,7 +34,7 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
    }
 
    @Override
-   public Mono<KeycloakResponse<RoleRepresentation[]>> getUserRole(String accessToken, String userId, String clientUuid) {
+   public Mono<KeycloakResponse<RoleRepresentation[]>> getUserRole(String accessToken, UUID userId, UUID clientUuid) {
       String rolesUrl = configuration.getRoleMappingPath(userId, clientUuid);
       return http.<RoleRepresentation[]>get(rolesUrl)
           .applicationJson()
@@ -44,7 +45,7 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
 
    @Override
    public Mono<KeycloakResponse<UserRepresentation[]>> getUsersByClientRoleName(String accessToken, String roleName,
-       String clientUuid, Boolean briefRepresentation, Integer first, Integer max) {
+       UUID clientUuid, Boolean briefRepresentation, Integer first, Integer max) {
       String clientsUsers = configuration.getClientsRolesUsersPath(clientUuid, roleName, briefRepresentation, first, max);
 
       return http.<UserRepresentation[]>get(clientsUsers)
@@ -55,7 +56,7 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
    }
 
    @Override
-   public Mono<KeycloakResponse<Void>> grantRole(String accessToken, String userId, String clientUuid,
+   public Mono<KeycloakResponse<Void>> grantRole(String accessToken, UUID userId, UUID clientUuid,
        RoleRepresentation[] roles) {
       String roleMappingPath = configuration.getRoleMappingPath(userId, clientUuid);
       boolean notFoundAttribute = Arrays.stream(roles).anyMatch(role -> Objects.isNull(role.getName()) || Objects.isNull(role.getId()));
@@ -71,7 +72,7 @@ public class KeycloakRoleAsyncClientImpl implements KeycloakRoleAsyncClient {
    }
 
    @Override
-   public Mono<KeycloakResponse<Void>> removeRole(String accessToken, String userId, String clientUuid,
+   public Mono<KeycloakResponse<Void>> removeRole(String accessToken, UUID userId, UUID clientUuid,
        RoleRepresentation[] roles) {
       String roleMappingPath = configuration.getRoleMappingPath(userId, clientUuid);
       boolean notFoundAttribute = Arrays.stream(roles).anyMatch(role -> Objects.isNull(role.getName()) || Objects.isNull(role.getId()));

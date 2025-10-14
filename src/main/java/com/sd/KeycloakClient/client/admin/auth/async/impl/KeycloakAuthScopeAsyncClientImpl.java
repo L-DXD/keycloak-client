@@ -5,6 +5,8 @@ import com.sd.KeycloakClient.config.ClientConfiguration;
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.admin.ScopeQueryParams;
 import com.sd.KeycloakClient.http.Http;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import java.util.UUID;
 import org.keycloak.representations.idm.authorization.ScopeRepresentation;
 import reactor.core.publisher.Mono;
 
@@ -21,9 +23,13 @@ public class KeycloakAuthScopeAsyncClientImpl implements KeycloakAuthScopeAsyncC
    @Override
    public Mono<KeycloakResponse<ScopeRepresentation>> getScope(
        String accessToken,
-       String clientUuid,
-       String scopeId
+       UUID clientUuid,
+       UUID scopeId
    ) {
+      if (clientUuid == null) {
+         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "clientUuid is required", null, null));
+      }
+
       return http.<ScopeRepresentation>get(configuration.getAuthScopeUrl(clientUuid, scopeId))
           .authorizationBearer(accessToken)
           .applicationJson()
@@ -34,7 +40,7 @@ public class KeycloakAuthScopeAsyncClientImpl implements KeycloakAuthScopeAsyncC
    @Override
    public Mono<KeycloakResponse<ScopeRepresentation[]>> getScopes(
        String accessToken,
-       String clientUuid,
+       UUID clientUuid,
        ScopeQueryParams scopeQueryParams
    ) {
       String queryString = scopeQueryParams == null ? "" : scopeQueryParams.toQueryString();
@@ -48,9 +54,13 @@ public class KeycloakAuthScopeAsyncClientImpl implements KeycloakAuthScopeAsyncC
    @Override
    public Mono<KeycloakResponse<Void>> createScope(
        String accessToken,
-       String clientUuid,
+       UUID clientUuid,
        ScopeRepresentation scopeRepresentation
    ) {
+      if (clientUuid == null) {
+         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "clientUuid is required", null, null));
+      }
+
       return http.<Void>post(configuration.getAuthScopeUrl(clientUuid))
           .authorizationBearer(accessToken)
           .entities(scopeRepresentation)
@@ -62,10 +72,18 @@ public class KeycloakAuthScopeAsyncClientImpl implements KeycloakAuthScopeAsyncC
    @Override
    public Mono<KeycloakResponse<Void>> updateScope(
        String accessToken,
-       String clientUuid,
+       UUID clientUuid,
        ScopeRepresentation scopeRepresentation
    ) {
-      return http.<Void>put(configuration.getAuthScopeUrl(clientUuid, scopeRepresentation.getId()))
+      if (clientUuid == null) {
+         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "clientUuid is required", null, null));
+      }
+
+      if (UUID.fromString(scopeRepresentation.getId()) == null) {
+         return Mono.just(KeycloakResponse.of(HttpResponseStatus.BAD_REQUEST.code(), "scope Id is required", null, null));
+      }
+
+      return http.<Void>put(configuration.getAuthScopeUrl(clientUuid, UUID.fromString(scopeRepresentation.getId())))
           .authorizationBearer(accessToken)
           .entities(scopeRepresentation)
           .applicationJson()
@@ -76,8 +94,8 @@ public class KeycloakAuthScopeAsyncClientImpl implements KeycloakAuthScopeAsyncC
    @Override
    public Mono<KeycloakResponse<Void>> deleteScope(
        String accessToken,
-       String clientUuid,
-       String scopeId
+       UUID clientUuid,
+       UUID scopeId
    ) {
       return http.<Void>delete(configuration.getAuthScopeUrl(clientUuid, scopeId))
           .authorizationBearer(accessToken)

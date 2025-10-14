@@ -2,6 +2,7 @@ package com.sd.KeycloakClient.client.admin.user.async;
 
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
+import java.util.UUID;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import reactor.core.publisher.Mono;
@@ -42,7 +43,7 @@ public interface KeycloakAdminUserAsyncClient {
     * @param userId      the unique identifier (UUID) of the user in Keycloak
     * @return a Mono wrapping the KeycloakResponse containing the UserRepresentation if found
     */
-   Mono<KeycloakResponse<UserRepresentation>> findByUserId(String accessToken, String userId);
+   Mono<KeycloakResponse<UserRepresentation>> findByUserId(String accessToken, UUID userId);
 
    /**
     * Creates a new user in the Keycloak realm using the provided access token and user information.
@@ -67,5 +68,5 @@ public interface KeycloakAdminUserAsyncClient {
    /**
     * Set up a new password for the user.
     */
-   Mono<KeycloakResponse<Void>> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation);
+   Mono<KeycloakResponse<Void>> resetPassword(String accessToken, UUID userId, CredentialRepresentation credentialRepresentation);
 }
