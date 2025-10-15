@@ -6,6 +6,7 @@ import com.sd.KeycloakClient.config.ClientConfiguration;
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
 import com.sd.KeycloakClient.http.Http;
+import java.util.UUID;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import reactor.core.publisher.Mono;
@@ -47,7 +48,7 @@ public class KeycloakAdminUserAsyncClientImpl implements KeycloakAdminUserAsyncC
 
    @Override
    public Mono<KeycloakResponse<Void>> updateUserInfo(String accessToken, UserRepresentation userRepresentation) {
-      String url = configuration.getUserUrl(userRepresentation.getId());
+      String url = configuration.getUserUrl(UUID.fromString(userRepresentation.getId()));
       return http.<Void>put(url)
           .authorizationBearer(accessToken)
           .entities(userRepresentation)
@@ -57,7 +58,7 @@ public class KeycloakAdminUserAsyncClientImpl implements KeycloakAdminUserAsyncC
    }
 
    @Override
-   public Mono<KeycloakResponse<UserRepresentation>> findByUserId(String accessToken, String userId) {
+   public Mono<KeycloakResponse<UserRepresentation>> findByUserId(String accessToken, UUID userId) {
       String url = configuration.getUserUrl(userId);
       return http.<UserRepresentation>get(url)
           .authorizationBearer(accessToken)
@@ -78,7 +79,7 @@ public class KeycloakAdminUserAsyncClientImpl implements KeycloakAdminUserAsyncC
    }
 
    @Override
-   public Mono<KeycloakResponse<Void>> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation) {
+   public Mono<KeycloakResponse<Void>> resetPassword(String accessToken, UUID userId, CredentialRepresentation credentialRepresentation) {
       String resetPasswordUrl = configuration.getResetPasswordUrl(userId);
       return http.<Void>put(resetPasswordUrl)
           .authorizationBearer(accessToken)

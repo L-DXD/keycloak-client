@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -98,16 +99,16 @@ public class ClientConfiguration {
       return attachRelativePath(getBaseAdminPath() + CLIENTS_PATH);
    }
 
-   public String getRoleMappingPath(String userId, String clientUuid) {
-      return getBaseUserPath() + "/" + userId + ROLE_MAPPING_PATH + CLIENTS_PATH + "/" + clientUuid;
+   public String getRoleMappingPath(UUID userId, UUID clientUuid) {
+      return getBaseUserPath() + "/" + userId.toString() + ROLE_MAPPING_PATH + CLIENTS_PATH + "/" + clientUuid.toString();
    }
 
-   public String getClientsRolesPath(String clientUuid) {
-      return getBaseClientsPath() + "/" + clientUuid + ROLES_PATH;
+   public String getClientsRolesPath(UUID clientUuid) {
+      return getBaseClientsPath() + "/" + clientUuid.toString() + ROLES_PATH;
 
    }
 
-   public String getClientsRolesUsersPath(String clientUuid, String roleName, Boolean briefRepresentation, Integer first, Integer max) {
+   public String getClientsRolesUsersPath(UUID clientUuid, String roleName, Boolean briefRepresentation, Integer first, Integer max) {
       StringBuilder queryParam = new StringBuilder();
       List<String> params = new ArrayList<>();
 
@@ -131,7 +132,7 @@ public class ClientConfiguration {
       return attachQueryParam(getBaseClientsPath(), queryParam);
    }
 
-   public String getRolesUrl(String clientUuid, String queryParam) {
+   public String getRolesUrl(UUID clientUuid, String queryParam) {
       return attachQueryParam(getClientsRolesPath(clientUuid), queryParam);
    }
 
@@ -143,24 +144,24 @@ public class ClientConfiguration {
       return attachQueryParam(getBaseUserPath() + COUNT_PATH, queryParam);
    }
 
-   public String getUserUrl(String userId) {
+   public String getUserUrl(UUID userId) {
       return getBaseUserPath() + "/" + userId;
    }
 
-   public String getResetPasswordUrl(String userId) {
+   public String getResetPasswordUrl(UUID userId) {
       return getUserUrl(userId) + RESET_PASSWORD_PATH;
    }
 
    // === Authorization Scope ===
-   public String getAuthScopeUrl(String clientUuid) {
-      return getBaseClientsPath() + "/" + clientUuid + AUTHZ_PATH + RESOURCE_SERVER_PATH + SCOPE_PATH;
+   public String getAuthScopeUrl(UUID clientUuid) {
+      return getBaseClientsPath() + "/" + clientUuid.toString() + AUTHZ_PATH + RESOURCE_SERVER_PATH + SCOPE_PATH;
    }
 
-   public String getAuthScopeUrl(String clientUuid, String scopeId) {
+   public String getAuthScopeUrl(UUID clientUuid, UUID scopeId) {
       return getAuthScopeUrl(clientUuid) + "/" + scopeId;
    }
 
-   public String getAuthScopeSearchUrl(String clientUuid, String queryParam) {
+   public String getAuthScopeSearchUrl(UUID clientUuid, String queryParam) {
       return attachQueryParam(getAuthScopeUrl(clientUuid), queryParam);
    }
 

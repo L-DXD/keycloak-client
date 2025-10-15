@@ -10,6 +10,7 @@ import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
 import com.sd.KeycloakClient.factory.KeycloakClient;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +29,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    private String adminAccessToken;
    private String accessToken;
 
-   private static final String TEST_USER_ID = "test-user-keycloak-id3";
+   private static final UUID TEST_USER_ID = UUID.fromString("a9a6359c-f4a3-4268-8133-1a64a894416d");
    private static final String TEST_USER_NAME = "test-user-keycloak3";
    private static final String TEST_USER_EMAIL = "test3@example.com";
    private static final String NEW_USER_EMAIL = "createnew@example.com";
@@ -221,7 +222,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
              assertThat(response.getBody()).isPresent();
 
              UserRepresentation userRepresentation = response.getBody().get();
-             assertThat(userRepresentation.getId()).isEqualTo(TEST_USER_ID);
+             assertThat(userRepresentation.getId()).isEqualTo(TEST_USER_ID.toString());
              assertThat(userRepresentation.getUsername()).isEqualTo(TEST_USER_NAME);
              assertThat(userRepresentation.getEmail()).isEqualTo(TEST_USER_EMAIL);
           }).verifyComplete();
@@ -232,7 +233,7 @@ class KeycloakAdminUserAsyncClientImplTest extends KeycloakShareTestContainer {
    void findByUserIdNotFound() {
       // when && then
       Mono<KeycloakResponse<UserRepresentation>> userInfo = keycloakClient.adminUserAsync()
-          .findByUserId(adminAccessToken, "NOT_FOUND_USER_ID");
+          .findByUserId(adminAccessToken, UUID.randomUUID());
       StepVerifier.create(userInfo)
           .assertNext(response -> {
              assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());

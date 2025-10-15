@@ -10,6 +10,7 @@ import com.sd.KeycloakClient.dto.admin.ScopeQueryParams;
 import com.sd.KeycloakClient.factory.KeycloakClient;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,7 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
 
    private String adminAccessToken;
    private String accessToken;
-   private static final String CLIENT_UUID = "de5fe303-2e50-428e-ac72-b81d1dc5139a";
+   private static final UUID CLIENT_UUID = UUID.fromString("de5fe303-2e50-428e-ac72-b81d1dc5139a");
    private static final String TEST_SCOPE_NAME = "GET";
    private static final int EXISTED_SCOPE_COUNT = 9;
 
@@ -83,7 +84,7 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
             // when
             Mono<KeycloakResponse<ScopeRepresentation>> whenGet =
                 ensureScopeId.flatMap(scopeId ->
-                    keycloakClient.authScopeAsync().getScope(accessToken, CLIENT_UUID, scopeId));
+                    keycloakClient.authScopeAsync().getScope(accessToken, CLIENT_UUID, UUID.fromString(scopeId)));
 
             // then
             StepVerifier.create(whenGet)
@@ -109,7 +110,7 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
          void getScopeAccessTokenNull() {
             // given
             Mono<KeycloakResponse<ScopeRepresentation>> scope = keycloakClient.authScopeAsync()
-                .getScope(null, "prm-client", "TEST_SCOPE_ID");
+                .getScope(null, UUID.fromString("de5fe303-2e50-428e-ac72-b81d1dc5139a"), UUID.randomUUID());
             // when && then
             StepVerifier.create(scope)
                 .assertNext(response -> {
@@ -125,13 +126,13 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
          void getScopeClientUuidNull() {
             // given
             Mono<KeycloakResponse<ScopeRepresentation>> scope = keycloakClient.authScopeAsync()
-                .getScope(accessToken, null, "TEST_SCOPE_ID");
+                .getScope(accessToken, null, UUID.randomUUID());
             // when && then
             StepVerifier.create(scope)
                 .assertNext(response -> {
-                   assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
+                   assertThat(HttpResponseStatus.BAD_REQUEST.code()).isEqualTo(response.getStatus());
                    assertThat(response.getBody()).isEmpty();
-                   assertThat(response.getMessage()).contains("Not Found");
+                   assertThat(response.getMessage()).contains("clientUuid is required");
                 })
                 .verifyComplete();
          }
@@ -391,9 +392,9 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
             // when && then
             StepVerifier.create(scopeResponse)
                 .assertNext(response -> {
-                   assertThat(HttpResponseStatus.NOT_FOUND.code()).isEqualTo(response.getStatus());
+                   assertThat(HttpResponseStatus.BAD_REQUEST.code()).isEqualTo(response.getStatus());
                    assertThat(response.getBody()).isEmpty();
-                   assertThat(response.getMessage()).contains("Not Found");
+                   assertThat(response.getMessage()).contains("clientUuid is required");
                 })
                 .verifyComplete();
          }
@@ -483,6 +484,7 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
          void updateScopeWithNullAccessToken() {
             // given
             ScopeRepresentation scopeToUpdate = new ScopeRepresentation();
+            scopeToUpdate.setId(UUID.randomUUID().toString());
             scopeToUpdate.setName("ScopeToUpdate");
 
             // when
@@ -536,7 +538,7 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
             Mono<KeycloakResponse<Void>> deleteScopeResponse = keycloakClient.authScopeAsync().deleteScope(
                 adminAccessToken,
                 CLIENT_UUID,
-                scopeId
+                UUID.fromString(scopeId)
             );
 
             StepVerifier.create(deleteScopeResponse)
@@ -557,7 +559,7 @@ class KeycloakAuthScopeAsyncClientImplTest extends KeycloakShareTestContainer {
          @DisplayName("case15: delete scope with null accessToken -> 401 Unauthorized")
          void deleteScopeWithNullAccessToken() {
             // given
-            String scopeId = "test-scope-id";
+            UUID scopeId = UUID.randomUUID();
 
             // when
             Mono<KeycloakResponse<Void>> deleteScopeResponse = keycloakClient.authScopeAsync().deleteScope(

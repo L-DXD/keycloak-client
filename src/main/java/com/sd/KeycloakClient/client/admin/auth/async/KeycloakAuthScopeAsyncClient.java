@@ -2,6 +2,7 @@ package com.sd.KeycloakClient.client.admin.auth.async;
 
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.admin.ScopeQueryParams;
+import java.util.UUID;
 import org.keycloak.representations.idm.authorization.ScopeRepresentation;
 import reactor.core.publisher.Mono;
 
@@ -20,7 +21,7 @@ public interface KeycloakAuthScopeAsyncClient {
     * @param scopeId     the unique identifier of the scope to retrieve
     * @return a {@link Mono} emitting a {@link KeycloakResponse} containing the {@link ScopeRepresentation} if found
     */
-   Mono<KeycloakResponse<ScopeRepresentation>> getScope(String accessToken, String clientUuid, String scopeId);
+   Mono<KeycloakResponse<ScopeRepresentation>> getScope(String accessToken, UUID clientUuid, UUID scopeId);
 
    /**
     * Retrieve a list of authorization scopes, optionally filtered by query parameters.
@@ -30,7 +31,7 @@ public interface KeycloakAuthScopeAsyncClient {
     * @param scopeQueryParams optional filtering and pagination parameters
     * @return a {@link Mono} emitting a {@link KeycloakResponse} containing an array of {@link ScopeRepresentation} objects
     */
-   Mono<KeycloakResponse<ScopeRepresentation[]>> getScopes(String accessToken, String clientUuid, ScopeQueryParams scopeQueryParams);
+   Mono<KeycloakResponse<ScopeRepresentation[]>> getScopes(String accessToken, UUID clientUuid, ScopeQueryParams scopeQueryParams);
 
    /**
     * @param accessToken         access token
@@ -38,7 +39,7 @@ public interface KeycloakAuthScopeAsyncClient {
     * @param scopeRepresentation scope representation
     * @return
     */
-   Mono<KeycloakResponse<Void>> createScope(String accessToken, String clientUuid, ScopeRepresentation scopeRepresentation);
+   Mono<KeycloakResponse<Void>> createScope(String accessToken, UUID clientUuid, ScopeRepresentation scopeRepresentation);
 
    /**
     * Update an existing authorization scope.
@@ -48,7 +49,7 @@ public interface KeycloakAuthScopeAsyncClient {
     * @param scopeRepresentation the updated scope definition (must include the ID)
     * @return a {@link Mono} emitting a {@link KeycloakResponse} with no body (success or failure status only)
     */
-   Mono<KeycloakResponse<Void>> updateScope(String accessToken, String clientUuid, ScopeRepresentation scopeRepresentation);
+   Mono<KeycloakResponse<Void>> updateScope(String accessToken, UUID clientUuid, ScopeRepresentation scopeRepresentation);
 
    /**
     * Delete an authorization scope by its ID.
@@ -58,5 +59,5 @@ public interface KeycloakAuthScopeAsyncClient {
     * @param scopeId     the unique identifier of the scope to delete
     * @return a {@link Mono} emitting a {@link KeycloakResponse} with no body (success or failure status only)
     */
-   Mono<KeycloakResponse<Void>> deleteScope(String accessToken, String clientUuid, String scopeId);
+   Mono<KeycloakResponse<Void>> deleteScope(String accessToken, UUID clientUuid, UUID scopeId);
 }

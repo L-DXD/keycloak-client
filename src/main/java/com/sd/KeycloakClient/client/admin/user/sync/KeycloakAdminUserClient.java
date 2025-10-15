@@ -2,6 +2,7 @@ package com.sd.KeycloakClient.client.admin.user.sync;
 
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
+import java.util.UUID;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
@@ -40,7 +41,7 @@ public interface KeycloakAdminUserClient {
     * @param accessToken the access token with sufficient privileges to access user information
     * @param userId      the unique identifier (UUID) of the user in Keycloak
     */
-   KeycloakResponse<UserRepresentation> findByUserId(String accessToken, String userId);
+   KeycloakResponse<UserRepresentation> findByUserId(String accessToken, UUID userId);
 
    /**
     * Creates a new user in the Keycloak realm using the provided access token and user information.
@@ -65,6 +66,6 @@ public interface KeycloakAdminUserClient {
    /**
     * Set up a new password for the user.
     */
-   KeycloakResponse<Void> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation);
+   KeycloakResponse<Void> resetPassword(String accessToken, UUID userId, CredentialRepresentation credentialRepresentation);
 
 }

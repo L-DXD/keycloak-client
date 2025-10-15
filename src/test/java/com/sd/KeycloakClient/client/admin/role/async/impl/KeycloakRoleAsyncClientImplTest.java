@@ -10,6 +10,7 @@ import com.sd.KeycloakClient.dto.admin.RoleQueryParams;
 import com.sd.KeycloakClient.factory.KeycloakClient;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.util.Arrays;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,10 +23,10 @@ import reactor.test.StepVerifier;
 class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
 
    private static KeycloakClient keycloakClient;
-   private static final String TEST_CLIENT_UUID = "de5fe303-2e50-428e-ac72-b81d1dc5139a";
-   private static final String TEST_INVALID_CLIENT_UUID = "aaaaaa-2e50-428e-ac72-b81d1dc5139a";
-   private static final String TEST_ROLE_ID = "13c39667-c8df-2d2a-15n7-v3c21700e3if";
-   private static final String TEST_GRANTED_USER = "test-user-keycloak-id2";
+   private static final UUID TEST_CLIENT_UUID = UUID.fromString("de5fe303-2e50-428e-ac72-b81d1dc5139a");
+   private static final UUID TEST_INVALID_CLIENT_UUID = UUID.fromString("aaaaaa-2e50-428e-ac72-b81d1dc5139a");
+   private static final UUID TEST_ROLE_ID = UUID.fromString("7a0c8b2d-5e9f-41a3-b0c6-3d7f4b8a2e1d");
+   private static final UUID TEST_GRANTED_USER = UUID.fromString("a9a6359c-f4a3-4268-8133-1a64a894416d");
    private static final String TEST_GRANTED_ROLE = "ADMIN";
 
    private String adminAccessToken;
@@ -86,7 +87,7 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
    void roleMapping() {
       // given
       RoleRepresentation role = new RoleRepresentation();
-      role.setId(TEST_ROLE_ID);
+      role.setId(TEST_ROLE_ID.toString());
       role.setName(TEST_GRANTED_ROLE);
 
       Mono<KeycloakResponse<Void>> grantRoleResponse = keycloakClient.roleAsync()
@@ -156,7 +157,7 @@ class KeycloakRoleAsyncClientImplTest extends KeycloakShareTestContainer {
    void grantAndRemoveRole() {
       // given
       RoleRepresentation role = new RoleRepresentation();
-      role.setId(TEST_ROLE_ID);
+      role.setId(TEST_ROLE_ID.toString());
       role.setName(TEST_GRANTED_ROLE);
 
       Mono<KeycloakResponse<Void>> grantRoleResponse = keycloakClient.roleAsync()

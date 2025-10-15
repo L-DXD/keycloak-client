@@ -4,6 +4,7 @@ import com.sd.KeycloakClient.client.admin.user.async.KeycloakAdminUserAsyncClien
 import com.sd.KeycloakClient.client.admin.user.sync.KeycloakAdminUserClient;
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.user.UserQueryParams;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -29,7 +30,7 @@ public class KeycloakAdminUserClientImpl implements KeycloakAdminUserClient {
    }
 
    @Override
-   public KeycloakResponse<UserRepresentation> findByUserId(String accessToken, String userId) {
+   public KeycloakResponse<UserRepresentation> findByUserId(String accessToken, UUID userId) {
       return adminUserClient.findByUserId(accessToken, userId).block();
    }
 
@@ -39,7 +40,7 @@ public class KeycloakAdminUserClientImpl implements KeycloakAdminUserClient {
    }
 
    @Override
-   public KeycloakResponse<Void> resetPassword(String accessToken, String userId, CredentialRepresentation credentialRepresentation) {
+   public KeycloakResponse<Void> resetPassword(String accessToken, UUID userId, CredentialRepresentation credentialRepresentation) {
       return adminUserClient.resetPassword(accessToken, userId, credentialRepresentation).block();
    }
 
