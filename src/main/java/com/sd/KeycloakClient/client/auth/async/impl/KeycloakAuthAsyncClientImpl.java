@@ -3,6 +3,8 @@ package com.sd.KeycloakClient.client.auth.async.impl;
 
 import static com.sd.KeycloakClient.http.KeycloakEntities.authenticationEntities;
 import static com.sd.KeycloakClient.http.KeycloakEntities.authorizationEntities;
+import static com.sd.KeycloakClient.http.KeycloakEntities.clientCredentialEntities;
+import static com.sd.KeycloakClient.http.KeycloakEntities.exchangeTokenEntities;
 import static com.sd.KeycloakClient.http.KeycloakEntities.logoutEntities;
 import static com.sd.KeycloakClient.http.KeycloakEntities.passwordEntities;
 import static com.sd.KeycloakClient.http.KeycloakEntities.refreshTokenEntities;
@@ -17,6 +19,8 @@ import com.sd.KeycloakClient.config.ClientConfiguration;
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakAuthorizationResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakAuthorizationResult;
+import com.sd.KeycloakClient.dto.auth.KeycloakClientTokenInfo;
+import com.sd.KeycloakClient.dto.auth.KeycloakExchangeTokenInfo;
 import com.sd.KeycloakClient.dto.auth.KeycloakIntrospectResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakJwksKeys;
 import com.sd.KeycloakClient.dto.auth.KeycloakTokenInfo;
@@ -105,6 +109,27 @@ public class KeycloakAuthAsyncClientImpl implements KeycloakAuthAsyncClient {
           .applicationFormUrlencoded()
           .entities(entities)
           .responseType(KeycloakIntrospectResponse.class)
+          .send();
+   }
+
+   @Override
+   public Mono<KeycloakResponse<KeycloakClientTokenInfo>> openIdConnectClientToken() {
+      Map<String, Object> entities = clientCredentialEntities(configuration.getClientId(), configuration.getClientSecret());
+      return http.<KeycloakClientTokenInfo>post(configuration.getOpenIdConnectTokenUrl())
+          .applicationFormUrlencoded()
+          .entities(entities)
+          .responseType(KeycloakClientTokenInfo.class)
+          .send();
+   }
+
+   @Override
+   public Mono<KeycloakResponse<KeycloakExchangeTokenInfo>> openIdConnectExchangeToken(String requestedSubject, String subjectToken) {
+      Map<String, Object> entities = exchangeTokenEntities(configuration.getClientId(), configuration.getClientSecret(), requestedSubject,
+          subjectToken);
+      return http.<KeycloakExchangeTokenInfo>post(configuration.getOpenIdConnectTokenUrl())
+          .applicationFormUrlencoded()
+          .entities(entities)
+          .responseType(KeycloakExchangeTokenInfo.class)
           .send();
    }
 

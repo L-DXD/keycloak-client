@@ -5,6 +5,8 @@ import com.sd.KeycloakClient.client.auth.async.impl.KeycloakAuthAsyncClientImpl;
 import com.sd.KeycloakClient.client.auth.sync.KeycloakAuthClient;
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakAuthorizationResult;
+import com.sd.KeycloakClient.dto.auth.KeycloakClientTokenInfo;
+import com.sd.KeycloakClient.dto.auth.KeycloakExchangeTokenInfo;
 import com.sd.KeycloakClient.dto.auth.KeycloakIntrospectResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakTokenInfo;
 import com.sd.KeycloakClient.dto.auth.VerifyTokenResult;
@@ -59,6 +61,16 @@ public class KeycloakAuthClientImpl implements KeycloakAuthClient {
    @Override
    public KeycloakResponse<RSAPublicKey> getPublicKey(String token) {
       return keycloakAsyncClient.getPublicKey(token).block();
+   }
+
+   @Override
+   public KeycloakResponse<KeycloakClientTokenInfo> openIdConnectClientToken() {
+      return keycloakAsyncClient.openIdConnectClientToken().block();
+   }
+
+   @Override
+   public KeycloakResponse<KeycloakExchangeTokenInfo> openIdConnectExchangeToken(String requestedSubject, String subjectToken) {
+      return keycloakAsyncClient.openIdConnectExchangeToken(requestedSubject, subjectToken).block();
    }
 
    @Override

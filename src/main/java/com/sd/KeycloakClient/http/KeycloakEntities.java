@@ -3,6 +3,7 @@ package com.sd.KeycloakClient.http;
 
 import static org.keycloak.OAuth2Constants.AUDIENCE;
 import static org.keycloak.OAuth2Constants.AUTHORIZATION_CODE;
+import static org.keycloak.OAuth2Constants.CLIENT_CREDENTIALS;
 import static org.keycloak.OAuth2Constants.CLIENT_ID;
 import static org.keycloak.OAuth2Constants.CLIENT_SECRET;
 import static org.keycloak.OAuth2Constants.CODE;
@@ -10,9 +11,12 @@ import static org.keycloak.OAuth2Constants.GRANT_TYPE;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.REDIRECT_URI;
 import static org.keycloak.OAuth2Constants.REFRESH_TOKEN;
+import static org.keycloak.OAuth2Constants.REQUESTED_SUBJECT;
 import static org.keycloak.OAuth2Constants.SCOPE;
 import static org.keycloak.OAuth2Constants.SCOPE_OPENID;
+import static org.keycloak.OAuth2Constants.SUBJECT_TOKEN;
 import static org.keycloak.OAuth2Constants.TOKEN;
+import static org.keycloak.OAuth2Constants.TOKEN_EXCHANGE_GRANT_TYPE;
 import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
 import static org.keycloak.OAuth2Constants.USERNAME;
 
@@ -50,9 +54,18 @@ public class KeycloakEntities {
       return Map.of(CLIENT_ID, clientId, CLIENT_SECRET, secret, TOKEN, token);
    }
 
+   public static Map<String, Object> clientCredentialEntities(String clientId, String secret) {
+      return Map.of(GRANT_TYPE, CLIENT_CREDENTIALS, CLIENT_ID, clientId, CLIENT_SECRET, secret);
+   }
+
    public static Map<String, Object> authorizationEntities(String clientId, String uri) {
       return Map.of(GRANT_TYPE, UMA_GRANT_TYPE, AUDIENCE, clientId, PERMISSION_RESOURCE_FORMAT, URI_FORMAT, PERMISSION, uri,
           MATCHING_URI, true);
+   }
+
+   public static Map<String, Object> exchangeTokenEntities(String clientId, String secret, String requestedSubject, String subjectToken) {
+      return Map.of(GRANT_TYPE, TOKEN_EXCHANGE_GRANT_TYPE, CLIENT_ID, clientId, CLIENT_SECRET, secret, REQUESTED_SUBJECT, requestedSubject,
+          SUBJECT_TOKEN, subjectToken);
    }
 }
 

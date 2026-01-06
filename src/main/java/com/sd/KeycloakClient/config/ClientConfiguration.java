@@ -65,6 +65,10 @@ public class ClientConfiguration {
       return getOidcUrl() + TOKEN_PATH + INTROSPECT_PATH;
    }
 
+   public String getOpenIdConnectTokenUrl() {
+      return getOidcUrl() + TOKEN_PATH;
+   }
+
    public String getLogoutUrl() {
       return getOidcUrl() + LOGOUT_PATH;
    }

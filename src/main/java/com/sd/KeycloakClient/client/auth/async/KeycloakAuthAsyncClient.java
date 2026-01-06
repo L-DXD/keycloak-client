@@ -3,6 +3,8 @@ package com.sd.KeycloakClient.client.auth.async;
 
 import com.sd.KeycloakClient.dto.KeycloakResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakAuthorizationResult;
+import com.sd.KeycloakClient.dto.auth.KeycloakClientTokenInfo;
+import com.sd.KeycloakClient.dto.auth.KeycloakExchangeTokenInfo;
 import com.sd.KeycloakClient.dto.auth.KeycloakIntrospectResponse;
 import com.sd.KeycloakClient.dto.auth.KeycloakTokenInfo;
 import com.sd.KeycloakClient.dto.auth.VerifyTokenResult;
@@ -77,4 +79,8 @@ public interface KeycloakAuthAsyncClient {
     * @return
     */
    Mono<KeycloakResponse<RSAPublicKey>> getPublicKey(String token);
+
+   Mono<KeycloakResponse<KeycloakClientTokenInfo>> openIdConnectClientToken();
+
+   Mono<KeycloakResponse<KeycloakExchangeTokenInfo>> openIdConnectExchangeToken(String requestedSubject, String subjectToken);
 }
