@@ -16,6 +16,7 @@ tasks.withType(Javadoc) {
         encoding 'UTF-8'
     }
 }
+//
 
 signing {
     def secretFile = file('secret.asc')
